@@ -1,28 +1,46 @@
 package com.qc.itaojin.canalclient.canal;
 
-//import com.alibaba.otter.canal.client.CanalConnector;
-//import com.alibaba.otter.canal.client.CanalConnectors;
-//import com.alibaba.otter.canal.protocol.CanalEntry.*;
-//import com.alibaba.otter.canal.protocol.Message;
+import com.alibaba.otter.canal.client.CanalConnector;
+import com.alibaba.otter.canal.client.CanalConnectors;
+import com.alibaba.otter.canal.protocol.CanalEntry.*;
+import com.alibaba.otter.canal.protocol.Message;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 
 /**
  * Created by fuqinqin on 2018/5/28.
  */
-public class ExampleDemo {
+@Component
+@Slf4j
+public class ExampleDemo extends Thread {
 
-    /*public static void main(String args[]) {
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
+
+    public static void main(String args[]) {
+
+    }
+
+    @Override
+    public void run() {
+        log.info("--------------------- running ----------------------");
+
         // 创建链接
-//        CanalConnector connector = CanalConnectors.newSingleConnector(new InetSocketAddress("itaojin101",
-//                11111), "example", "", "");
+        CanalConnector connector = CanalConnectors.newSingleConnector(new InetSocketAddress("192.168.46.128",
+                11111), "example", "", "");
         // HA
-        CanalConnector connector = CanalConnectors.newClusterConnector("itaojin105:2181,itaojin106:2181,itaojin107:2181", "example", "", "");
+//        CanalConnector connector = CanalConnectors.newClusterConnector("itaojin105:2181,itaojin106:2181,itaojin107:2181", "example", "", "");
         int batchSize = 1000;
         int emptyCount = 0;
         try {
             connector.connect();
             connector.subscribe(".*\\..*");
+//            connector.subscribe(".*\\\\..*");
             connector.rollback();
             int totalEmptyCount = 120;
             while (emptyCount < totalEmptyCount) {
@@ -40,6 +58,7 @@ public class ExampleDemo {
                     emptyCount = 0;
                     // System.out.printf("message[batchId=%s,size=%s] \n", batchId, size);
                     printEntry(message.getEntries());
+                    kafkaTemplate.send("hello","有货...");
                 }
 
                 connector.ack(batchId); // 提交确认
@@ -91,5 +110,5 @@ public class ExampleDemo {
         for (Column column : columns) {
             System.out.println(column.getName() + " : " + column.getValue() + "    update=" + column.getUpdated());
         }
-    }*/
+    }
 }

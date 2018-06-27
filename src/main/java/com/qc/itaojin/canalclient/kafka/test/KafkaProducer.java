@@ -25,8 +25,8 @@ public class KafkaProducer {
     }
 
     public boolean send(Message message){
-        log.info("message = {}",message.toString());
-        kafkaTemplate.send("testTopic", JSON.toJSONString(message));
+        log.info("producer message = {}",message.toString());
+        kafkaTemplate.send("hello", JSON.toJSONString(message));
         return true;
     }
 

@@ -1,5 +1,6 @@
 package com.qc.itaojin.canalclient.canal.listener;
 
+import com.qc.itaojin.canalclient.canal.ExampleDemo;
 import com.qc.itaojin.canalclient.common.ApplicationContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
@@ -18,5 +19,7 @@ public class CanalProducerListener implements ApplicationListener<ContextRefresh
         }
 
         log.info("================================= haha =====================================");
+
+        ApplicationContextHolder.getBean("exampleDemo", ExampleDemo.class).start();
     }
 }
