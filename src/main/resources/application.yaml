@@ -1,0 +1,32 @@
+server:
+  context-path: /canal-client
+  port: 8080
+
+#kafka相关配置
+spring:
+  kafka:
+    bootstrap-servers: itaojin105:9092,itaojin106:9092
+    consumer:
+      #设置一个默认组
+      group-id: 0
+      #key-value序列化反序列化
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      #每次批量发送消息的数量
+      batch-size: 65536
+      buffer-memory: 524288
+
+
+
+canal-client:
+  #Zookeeper
+  zk-nodes: itaojin105:2181,itaojin106:2181,itaojin107:2181
+  #Canal
+  instance: example
+
+
+
+
