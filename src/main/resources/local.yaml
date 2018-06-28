@@ -1,0 +1,14 @@
+############################  canal的配置 ##############################
+canal:
+  # Zookeeper
+#  zk-servers: itaojin105:2181,itaojin106:2181,itaojin107:2181
+  zk-servers: node1:2181
+  # instance
+  destination: example
+  # canal客户端向server抓取数据的数据
+  batch-size: 1000
+  # 监听表格正则
+#  filter-regex: .*\\..*
+  filter-regex: test\\..*
+  # 客户端向服务端拉取数据的时间间隔（毫秒）
+  request-interval: 1000

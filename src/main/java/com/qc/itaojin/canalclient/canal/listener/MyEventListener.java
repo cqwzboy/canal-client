@@ -1,11 +1,11 @@
 package com.qc.itaojin.canalclient.canal.listener;
 
-import com.alibaba.otter.canal.protocol.CanalEntry;
-import com.xpand.starter.canal.annotation.*;
+//import com.alibaba.otter.canal.protocol.CanalEntry;
+//import com.xpand.starter.canal.annotation.*;
 
-@CanalEventListener
+//@CanalEventListener
 public class MyEventListener {
-    @InsertListenPoint
+   /* @InsertListenPoint
     public void onEvent(CanalEntry.EventType eventType, CanalEntry.RowData rowData) {
         //do something...
     }
@@ -23,5 +23,5 @@ public class MyEventListener {
     @ListenPoint(destination = "example", schema = "canal-test", table = {"t_user", "test_table"}, eventType = CanalEntry.EventType.UPDATE)
     public void onEvent4(CanalEntry.EventType eventType, CanalEntry.RowData rowData) {
         //do something...
-    }
+    }*/
 }

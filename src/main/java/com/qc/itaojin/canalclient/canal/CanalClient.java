@@ -4,12 +4,13 @@ import com.alibaba.otter.canal.client.CanalConnector;
 import com.alibaba.otter.canal.client.CanalConnectors;
 import com.alibaba.otter.canal.protocol.CanalEntry.*;
 import com.alibaba.otter.canal.protocol.Message;
+import com.qc.itaojin.canalclient.common.config.CanalConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.net.InetSocketAddress;
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -17,61 +18,82 @@ import java.util.List;
  */
 @Component
 @Slf4j
-public class ExampleDemo extends Thread {
+public class CanalClient extends Thread {
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
+    @Autowired
+    private CanalConfig canalConfig;
 
-    public static void main(String args[]) {
+    /**
+     * zk集群，多个以 , 隔开
+     * */
+    private String zkServers;
+    /**
+     *  canal instance
+     * */
+    private String destination;
+    /**
+     * 批量抓取数量
+     * */
+    private int batchSize;
+    /**
+     * 过滤正则
+     * */
+    private String filterRegex;
+    /**
+     * 客户端向服务端发送请求的频率
+     * */
+    private int requestInterval;
 
+    @PostConstruct
+    public void init(){
+        zkServers = canalConfig.getZkServers();
+        destination = canalConfig.getDestination();
+        batchSize = canalConfig.getBatchSize();
+        filterRegex = canalConfig.getFilterRegex();
+        requestInterval = canalConfig.getRequestInterval();
     }
 
     @Override
     public void run() {
-        log.info("--------------------- running ----------------------");
-
-        // 创建链接
-        CanalConnector connector = CanalConnectors.newSingleConnector(new InetSocketAddress("192.168.46.128",
-                11111), "example", "", "");
-        // HA
-//        CanalConnector connector = CanalConnectors.newClusterConnector("itaojin105:2181,itaojin106:2181,itaojin107:2181", "example", "", "");
-        int batchSize = 1000;
-        int emptyCount = 0;
+        // 创建链接（HA）
+        CanalConnector connector = CanalConnectors.newClusterConnector(zkServers, destination, "", "");
         try {
             connector.connect();
-            connector.subscribe(".*\\..*");
-//            connector.subscribe(".*\\\\..*");
+            connector.subscribe(filterRegex);
             connector.rollback();
-            int totalEmptyCount = 120;
-            while (emptyCount < totalEmptyCount) {
-                Message message = connector.getWithoutAck(batchSize); // 获取指定数量的数据
+            while (true) {
+                // 获取指定数量的数据
+                Message message = connector.getWithoutAck(batchSize);
                 long batchId = message.getId();
                 int size = message.getEntries().size();
                 if (batchId == -1 || size == 0) {
-                    emptyCount++;
-                    System.out.println("empty count : " + emptyCount);
+                    log.info("canal client listen server...");
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(requestInterval);
                     } catch (InterruptedException e) {
                     }
                 } else {
-                    emptyCount = 0;
-                    // System.out.printf("message[batchId=%s,size=%s] \n", batchId, size);
-                    printEntry(message.getEntries());
-                    kafkaTemplate.send("hello","有货...");
+                    // 检查有效性
+                    if(!connector.checkValid()){
+                        connector = CanalConnectors.newClusterConnector(zkServers, destination, "", "");
+                    }
+                    process(message.getEntries());
                 }
 
-                connector.ack(batchId); // 提交确认
-                // connector.rollback(batchId); // 处理失败, 回滚数据
-            }
+                // 提交确认
+                connector.ack(batchId);
+                // 处理失败, 回滚数据
+//                connector.rollback(batchId);
 
-            System.out.println("empty too many times, exit");
+            }
         } finally {
             connector.disconnect();
         }
     }
 
-    private static void printEntry(List<Entry> entrys) {
+    private static void process(List<Entry> entrys) {
         for (Entry entry : entrys) {
             if (entry.getEntryType() == EntryType.TRANSACTIONBEGIN || entry.getEntryType() == EntryType.TRANSACTIONEND) {
                 continue;
@@ -86,10 +108,13 @@ public class ExampleDemo extends Thread {
             }
 
             EventType eventType = rowChage.getEventType();
-            System.out.println(String.format("================&gt; binlog[%s:%s] , name[%s,%s] , eventType : %s",
-                    entry.getHeader().getLogfileName(), entry.getHeader().getLogfileOffset(),
+            System.out.println(String.format("================&gt; binlog[%s:%s:%s] , name[%s,%s] , eventType : %s",
+                    entry.getHeader().getLogfileName(), entry.getHeader().getLogfileOffset(), entry.getHeader().getExecuteTime(),
                     entry.getHeader().getSchemaName(), entry.getHeader().getTableName(),
                     eventType));
+
+            System.out.println("是否是ddl变更操作: "+rowChage.getIsDdl());
+            System.out.println("具体的ddl sql: "+rowChage.getSql());
 
             for (RowData rowData : rowChage.getRowDatasList()) {
                 if (eventType == EventType.DELETE) {
