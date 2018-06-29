@@ -1,4 +1,4 @@
-package com.qc.itaojin.canalclient.kafka.test2;
+package com.qc.itaojin.canalclient.kafka.test;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;

@@ -1,8 +1,7 @@
 package com.qc.itaojin.canalclient.controller;
 
-import com.qc.itaojin.canalclient.kafka.test.KafkaProducer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,7 +16,7 @@ import javax.xml.ws.RequestWrapper;
 public class HelloController {
 
     @Autowired
-    private KafkaProducer kafkaProducer;
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     @GetMapping("")
     public String sayHello(){
@@ -26,7 +25,7 @@ public class HelloController {
 
     @GetMapping("/test")
     public String test(){
-        kafkaProducer.send(1,"zhangsan",23);
+        kafkaTemplate.send("hello", "HelloController's test");
         return "success";
     }
 

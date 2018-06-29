@@ -2,8 +2,10 @@ package com.qc.itaojin.canalclient.canal.entity;
 
 import com.qc.itaojin.canalclient.enums.CanalOperationLevelEnum;
 import com.qc.itaojin.canalclient.enums.CanalOperationTypeEnum;
+import com.qc.itaojin.canalclient.enums.KeyTypeEnum;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,7 +42,7 @@ public class CanalOperationEntity {
     private CanalOperationLevelEnum operationLevel;
 
     /**
-     * 相关操作对应的字段和值得键值map
+     * 相关操作对应的字段和值值键值map
      * */
     private Map<String, Object> columnsMap;
 
@@ -58,5 +60,18 @@ public class CanalOperationEntity {
      * binlog position
      * */
     private long logfileOffset;
+
+    @Data
+    public static class Medium extends CanalOperationEntity{
+        /**
+         * MySQL数据库表的主键类型
+         * */
+        private KeyTypeEnum keyType;
+
+        /**
+         * 主键列表
+         * */
+        private List<String> pks;
+    }
 
 }

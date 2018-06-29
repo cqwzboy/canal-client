@@ -1,5 +1,7 @@
-package com.qc.itaojin.canalclient.kafka.test;
+package com.qc.itaojin.canalclient.kafka;
 
+import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity;
+import com.qc.itaojin.canalclient.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -14,8 +16,9 @@ public class KafkaConsumer {
     @KafkaListener(topics = {"hello"})
     public void processMessage(String content) {
         log.info("consumer message:{}", content);
-//        Message message = JSON.parseObject(content, new TypeReference<Message>(){});
-//        log.info("消费者，message={}",message);
+
+        CanalOperationEntity operationEntity = JsonUtil.parse(content, CanalOperationEntity.class);
+        log.info("operationEntity: {}", operationEntity.toString());
     }
 
 }
