@@ -7,7 +7,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * Created by fuqinqin on 2018/6/29.
+ * @desc
+ * @author fuqinqin
+ * @date 2018-06--29
  */
 public class BaseConfiguration {
 

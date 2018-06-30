@@ -15,7 +15,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by fuqinqin on 2018/6/29.
+ * @desc MySQL连接池
+ * @author fuqinqin
+ * @date 2018-06-29
  */
 @Component
 public class ConnectionPool {
@@ -77,16 +79,14 @@ public class ConnectionPool {
 
         try {
             Class.forName(driver);
+            conn = DriverManager.getConnection(
+                    StringUtils.contact(url, schema),
+                    userName,
+                    password);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            return conn;
-        }
-
-        try {
-            conn = DriverManager.getConnection(StringUtils.contact(url, schema),userName,password);
         } catch (SQLException e) {
             e.printStackTrace();
-            return conn;
         }
 
         return conn;
