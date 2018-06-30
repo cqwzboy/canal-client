@@ -18,8 +18,9 @@ public class CanalProducerStarterListener implements ApplicationListener<Context
             ApplicationContextHolder.set(contextRefreshedEvent.getApplicationContext());
         }
 
-        log.info("================================= haha =====================================");
 
+        // start tjkCanalClient
         ApplicationContextHolder.getBean("tjkCanalClient", TjkCanalClient.class).start();
+        log.info("tjkCanalClient started successfully...");
     }
 }
