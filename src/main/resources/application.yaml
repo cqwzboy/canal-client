@@ -1,29 +1,3 @@
-server:
-  context-path: /canal-client
-  port: 8080
-
-canal-client:
-
-
-#kafka
 spring:
-  kafka:
-#    bootstrap-servers: 192.168.46.128:9092
-#    bootstrap-servers: itaojin105:9092,itaojin106:9092
-    bootstrap-servers: node1:9092
-    consumer:
-      group-id: 0
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      enable-auto-commit: true
-      auto-commit-interval: 100
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      batch-size: 65536
-      buffer-memory: 524288
-
-
-
-
+  profiles:
+    active: dev
