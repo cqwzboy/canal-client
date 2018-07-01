@@ -1,7 +1,3 @@
-server:
-  context-path: /canal-client
-  port: 8080
-
 #kafka
 spring:
   kafka:
