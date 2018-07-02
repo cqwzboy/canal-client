@@ -1,7 +1,12 @@
+############################  zookeeper ##############################
+zookeeper:
+  servers: itaojin105:2181,itaojin106:2181,itaojin107:2181
+  # 与servers的区别是不带端口信息
+  quorum: itaojin105,itaojin106,itaojin107
+  port: 2181
+
 ############################  canal的配置 ##############################
 canal:
-  # zookeeper
-  zk-servers: node1:2181
   # canal客户端向server抓取数据的数据
   batch-size: 1000
 
@@ -56,3 +61,13 @@ mysql:
 ############################ kafka ##############################
 kafka:
   topic: hello
+
+############################ hive ##############################
+hive:
+  driver: org.apache.hive.jdbc.HiveDriver
+  # schema可以动态切换
+  url: jdbc:hive2://itaojin106:10000/
+
+############################ hbase ##############################
+hbase:
+  master: itaojin102:600000

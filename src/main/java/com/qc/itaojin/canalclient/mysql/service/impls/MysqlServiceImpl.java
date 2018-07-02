@@ -1,11 +1,13 @@
-package com.qc.itaojin.canalclient.common.mysql;
+package com.qc.itaojin.canalclient.mysql.service.impls;
 
+import com.qc.itaojin.canalclient.common.mysql.ConnectionPool;
 import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
 import com.qc.itaojin.canalclient.enums.KeyTypeEnum;
+import com.qc.itaojin.canalclient.mysql.service.IMysqlService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -15,12 +17,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @desc Mysql帮助类，可以实现一些Mysql相关的操作
- * @author fuqinqin
- * @date 2018-06-29
+ * Created by fuqinqin on 2018/7/2.
  */
-@Component
-public class MysqlHelper {
+@Service
+public class MysqlServiceImpl implements IMysqlService {
 
     @Autowired
     private ConnectionPool connectionPool;
@@ -28,6 +28,7 @@ public class MysqlHelper {
     /**
      * 获取表格的主键（无主键，单主键，联合主键）
      * */
+    @Override
     public List<String> getPKs(DataSourceTypeEnum dataSourceType, String schema, String table){
         if(dataSourceType==null || StringUtils.isBlank(schema) || StringUtils.isBlank(table)){
             return null;
@@ -71,6 +72,7 @@ public class MysqlHelper {
     /**
      * 根据schema和table获取表格的主键类型
      * */
+    @Override
     public KeyTypeEnum analyseKeyType(DataSourceTypeEnum dataSourceType, String schema, String table){
         List<String> pks = getPKs(dataSourceType, schema, table);
 
@@ -83,4 +85,22 @@ public class MysqlHelper {
         }
     }
 
+    /**
+     * 获取表内字段集合信息
+     * */
+    @Override
+    public ResultSet getColumnResultSet(DataSourceTypeEnum dataSourceType, String schema, String table) {
+        Connection connection = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = connectionPool.getConn(dataSourceType, schema);
+            DatabaseMetaData metaData = connection.getMetaData();
+            resultSet = metaData.getColumns(null, schema, table, "%");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return resultSet;
+    }
 }

@@ -2,6 +2,7 @@ package com.qc.itaojin.canalclient.canal.entity;
 
 import com.qc.itaojin.canalclient.enums.CanalOperationLevelEnum;
 import com.qc.itaojin.canalclient.enums.CanalOperationTypeEnum;
+import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
 import com.qc.itaojin.canalclient.enums.KeyTypeEnum;
 import lombok.Data;
 
@@ -19,7 +20,12 @@ public class CanalOperationEntity {
     /**
      * HBase Row Key
      * */
-    private Object rowKey;
+    private String rowKey;
+
+    /**
+     * 物理MySQL数据库类型（业务分类）
+     * */
+    private DataSourceTypeEnum ID;
 
     /**
      * 库
@@ -44,7 +50,7 @@ public class CanalOperationEntity {
     /**
      * 相关操作对应的字段和值值键值map
      * */
-    private Map<String, Object> columnsMap;
+    private Map<String, String> columnsMap;
 
     /**
      * 若是增加表格操作，则会生成一个HiveSQL的字段
@@ -63,6 +69,11 @@ public class CanalOperationEntity {
 
     @Data
     public static class Medium extends CanalOperationEntity{
+
+        public Medium(DataSourceTypeEnum ID){
+            super.setID(ID);
+        }
+
         /**
          * MySQL数据库表的主键类型
          * */

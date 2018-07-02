@@ -1,15 +1,11 @@
 package com.qc.itaojin.canalclient.common.config;
 
 import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
-import com.qc.itaojin.canalclient.util.StringUtils;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 /**
  * Created by fuqinqin on 2018/6/28.
@@ -19,9 +15,6 @@ import java.lang.reflect.Method;
 @PropertySource(value = "classpath:local.yaml")
 @Data
 public class CanalConfiguration extends BaseConfiguration{
-
-    @Value("${zk-servers}")
-    private String zkServers;
     @Value("${batch-size}")
     private int batchSize;
 
