@@ -4,4 +4,4 @@ spring:
 
 server:
   context-path: /canal-client
-  port: 8081
+  port: 8080

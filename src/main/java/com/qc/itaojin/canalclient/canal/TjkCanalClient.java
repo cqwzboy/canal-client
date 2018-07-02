@@ -92,7 +92,7 @@ public class TjkCanalClient extends Thread {
             int size = message.getEntries().size();
             boolean flag = true;
             if (batchId == -1 || size == 0) {
-                log.info("canal client listen server...");
+                log.info("tjk canal client listen server...");
                 try {
                     Thread.sleep(requestInterval);
                 } catch (InterruptedException e) {
