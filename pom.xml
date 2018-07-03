@@ -49,6 +49,11 @@
             <artifactId>spring-kafka</artifactId>
             <version>${spring-kafka.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.qc.itaojin</groupId>
+            <artifactId>hbase-client</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
         <!--数据库-->
         <dependency>
@@ -101,18 +106,6 @@
             <version>${canal.version}</version>
         </dependency>
 
-        <!-- HBase -->
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-client</artifactId>
-            <version>${hbase.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-            <version>${hadoop.version}</version>
-        </dependency>
-
         <!--<dependency>
             <groupId>private</groupId>
             <artifactId>starter-canal</artifactId>
@@ -135,5 +128,19 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>nexus</id>
+            <name>Nexus Repository</name>
+            <url>http://192.168.1.105:8081/nexus/content/groups/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <!--snapshots默认是关闭的,需要开启  -->
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
 </project>

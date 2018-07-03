@@ -17,6 +17,14 @@ spring:
       batch-size: 65536
       buffer-memory: 524288
 
+######################### itaojin ###########################
+itaojin:
+  hbase:
+    master: itaojin102:600000
+  zookeeper:
+    quorum: itaojin105,itaojin106,itaojin107
+    port: 2181
+
 
 
 

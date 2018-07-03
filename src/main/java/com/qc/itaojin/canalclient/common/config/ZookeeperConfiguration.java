@@ -18,10 +18,4 @@ public class ZookeeperConfiguration {
     @Value("${servers}")
     private String zkServers;
 
-    @Value("${quorum}")
-    private String quorum;
-
-    @Value("${port}")
-    private int port;
-
 }
