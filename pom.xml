@@ -28,6 +28,8 @@
         <canal.version>1.0.25</canal.version>
         <mysql-connector-java.version>5.1.38</mysql-connector-java.version>
         <spring-kafka.version>1.1.0.RELEASE</spring-kafka.version>
+        <hbase-client.version>1.0-SNAPSHOT</hbase-client.version>
+        <hive-client.version>1.0-SNAPSHOT</hive-client.version>
     </properties>
 
     <dependencies>
@@ -52,7 +54,12 @@
         <dependency>
             <groupId>com.qc.itaojin</groupId>
             <artifactId>hbase-client</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${hbase-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.qc.itaojin</groupId>
+            <artifactId>hive-client</artifactId>
+            <version>${hive-client.version}</version>
         </dependency>
 
         <!--数据库-->
@@ -61,32 +68,12 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql-connector-java.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.hive</groupId>
-            <artifactId>hive-jdbc</artifactId>
-            <version>${hive.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty.aggregate</groupId>
-                    <artifactId>jetty-all</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.hive</groupId>
-                    <artifactId>hive-shims</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
         <!--common-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.44</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

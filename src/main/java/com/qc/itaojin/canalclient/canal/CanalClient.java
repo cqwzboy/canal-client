@@ -4,10 +4,12 @@ import com.alibaba.otter.canal.client.CanalConnector;
 import com.alibaba.otter.canal.client.CanalConnectors;
 import com.alibaba.otter.canal.protocol.CanalEntry.*;
 import com.alibaba.otter.canal.protocol.Message;
+import com.qc.itaojin.canalclient.annotation.PrototypeComponent;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity.Medium;
+import com.qc.itaojin.canalclient.common.Constants;
+import com.qc.itaojin.canalclient.common.Constants.KafkaConstants;
 import com.qc.itaojin.canalclient.common.config.CanalConfiguration;
-import com.qc.itaojin.canalclient.common.config.KafkaConfiguration;
 import com.qc.itaojin.canalclient.common.config.ZookeeperConfiguration;
 import com.qc.itaojin.canalclient.enums.CanalOperationLevelEnum;
 import com.qc.itaojin.canalclient.enums.CanalOperationTypeEnum;
@@ -18,11 +20,10 @@ import com.qc.itaojin.canalclient.util.BeanUtils;
 import com.qc.itaojin.canalclient.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.hadoop.hdfs.security.token.block.DataEncryptionKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,16 +32,14 @@ import java.util.Map;
 /**
  * Created by fuqinqin on 2018/6/28.
  */
-@Component
+@PrototypeComponent
 @Slf4j
-public class TjkCanalClient extends Thread {
+public class CanalClient extends Thread {
 
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
     @Autowired
     private CanalConfiguration canalConfig;
-    @Autowired
-    private KafkaConfiguration kafkaConfiguration;
     @Autowired
     private ZookeeperConfiguration zookeeperConfiguration;
     @Autowired
@@ -49,7 +48,7 @@ public class TjkCanalClient extends Thread {
     /**
      * canal客户端类型
      * */
-    private DataSourceTypeEnum ID = DataSourceTypeEnum.TJK;
+    private DataSourceTypeEnum ID;
 
     /**
      * zk集群，多个以 , 隔开
@@ -72,17 +71,38 @@ public class TjkCanalClient extends Thread {
      * */
     private int requestInterval;
 
-    @PostConstruct
-    public void init(){
+    /**
+     * 线程ID
+     * */
+    private long threadId;
+
+    /**
+     * kafka的主题
+     * */
+    private String topic = KafkaConstants.TOPIC;
+
+    /**
+     * 初始化身份 ID，并返回原对象
+     * */
+    public CanalClient init(DataSourceTypeEnum ID){
+        this.ID = ID;
+        return this;
+    }
+
+    private void initParams(){
         zkServers = zookeeperConfiguration.getZkServers();
         batchSize = canalConfig.getBatchSize();
         destination = canalConfig.getDestination(ID);
         filterRegex = canalConfig.getFilterRegex(ID);
         requestInterval = canalConfig.getRequestInterval(ID);
+        threadId = Thread.currentThread().getId();
     }
 
     @Override
     public void run() {
+        // 初始化
+        initParams();
+
         // 创建链接（HA）
         CanalConnector connector = CanalConnectors.newClusterConnector(zkServers, destination, "", "");
         connector.connect();
@@ -95,7 +115,7 @@ public class TjkCanalClient extends Thread {
             int size = message.getEntries().size();
             boolean flag = true;
             if (batchId == -1 || size == 0) {
-                log.info("tjk canal client listen server...");
+                info("tjk canal client listen server...");
                 try {
                     Thread.sleep(requestInterval);
                 } catch (InterruptedException e) {
@@ -142,7 +162,7 @@ public class TjkCanalClient extends Thread {
             try {
                 rowChage = RowChange.parseFrom(entry.getStoreValue());
             } catch (Exception e) {
-                log.error("ERROR ## parser of eromanga-event has an error , data: {}", entry.toString());
+                error("ERROR ## parser of eromanga-event has an error , data: {}", entry.toString());
                 e.printStackTrace();
                 return false;
             }
@@ -152,7 +172,7 @@ public class TjkCanalClient extends Thread {
             String table = entry.getHeader().getTableName();
             String logfileName = entry.getHeader().getLogfileName();
             long logfileOffset = entry.getHeader().getLogfileOffset();
-            log.info("================ binlog[{}:{}:{}] , name[{},{}] , eventType : {}",
+            info("================ binlog[{}:{}:{}] , name[{},{}] , eventType : {}",
                     logfileName,
                     logfileOffset,
                     entry.getHeader().getExecuteTime(),
@@ -161,10 +181,10 @@ public class TjkCanalClient extends Thread {
                     eventType);
 
             boolean isDdl = rowChage.getIsDdl();
-            log.info("是否是ddl变更操作: {}", isDdl);
-            log.info("具体的ddl sql: {}", rowChage.getSql());
+            info("是否是ddl变更操作: {}", isDdl);
+            info("具体的ddl sql: {}", rowChage.getSql());
 
-            Medium medium = new Medium(ID);
+            Medium medium = new Medium(ID, threadId);
             medium.setSchema(schema);
             medium.setTable(table);
             medium.setLogfileName(logfileName);
@@ -183,7 +203,7 @@ public class TjkCanalClient extends Thread {
                     medium.setOperationType(CanalOperationTypeEnum.CREATE);
                 }
                 CanalOperationEntity operationEntity = BeanUtils.copyProperties(medium, CanalOperationEntity.class);
-                kafkaTemplate.send(kafkaConfiguration.getTopic(), JsonUtil.toJson(operationEntity));
+                kafkaTemplate.send(topic, JsonUtil.toJson(operationEntity));
             }
             // DML操作
             else{
@@ -193,7 +213,7 @@ public class TjkCanalClient extends Thread {
                 // 发布到kafka
                 if(CollectionUtils.isNotEmpty(list)){
                     for (CanalOperationEntity operationEntity : list) {
-                        kafkaTemplate.send(kafkaConfiguration.getTopic(), JsonUtil.toJson(operationEntity));
+                        kafkaTemplate.send(topic, JsonUtil.toJson(operationEntity));
                     }
                 }
             }
@@ -214,7 +234,7 @@ public class TjkCanalClient extends Thread {
         medium.setPks(pks);
         if(CollectionUtils.isEmpty(pks)){
             // TODO
-            log.info("无主键数据更新，跳过");
+            info("无主键数据更新，跳过");
             medium.setKeyType(KeyTypeEnum.NONE);
             return false;
         }else if(pks.size() == 1){
@@ -262,7 +282,7 @@ public class TjkCanalClient extends Thread {
                 for (Column column : columns) {
                     String columnName = column.getName();
                     String columnValue = column.getValue();
-                    log.info("{} : {} : update={}", columnName, columnValue, column.getUpdated());
+                    info("{} : {} : update={}", columnName, columnValue, column.getUpdated());
                     if(needAdd(medium.getPks(), medium.getKeyType(), columnName, CanalOperationTypeEnum.CREATE, true)){
                         columnsMap.put(columnName, columnValue);
                     }
@@ -282,7 +302,7 @@ public class TjkCanalClient extends Thread {
                     String columnName = column.getName();
                     String columnValue = column.getValue();
                     boolean updated = column.getUpdated();
-                    log.info("{} : {} : update={}", columnName, columnValue, updated);
+                    info("{} : {} : update={}", columnName, columnValue, updated);
                     if(needAdd(medium.getPks(), medium.getKeyType(), columnName, CanalOperationTypeEnum.UPDATE, updated)){
                         columnsMap.put(columnName, columnValue);
                     }
@@ -352,5 +372,21 @@ public class TjkCanalClient extends Thread {
        sb.setLength(sb.length() -1);
 
         return sb.toString();
+    }
+
+    /**
+     * 多线程间个性输出日志
+     * */
+    private void info(String content, Object... objects){
+        log.info(String.format(Constants.LOG_TEMPLATE, threadId, ID.name(), content), objects);
+    }
+    private void error(String content, Object... objects){
+        log.error(String.format(Constants.LOG_TEMPLATE, threadId, ID.name(), content), objects);
+    }
+    private void debug(String content, Object... objects){
+        log.debug(String.format(Constants.LOG_TEMPLATE, threadId, ID.name(), content), objects);
+    }
+    private void warn(String content, Object... objects){
+        log.warn(String.format(Constants.LOG_TEMPLATE, threadId, ID.name(), content), objects);
     }
 }

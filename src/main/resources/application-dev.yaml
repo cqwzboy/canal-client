@@ -24,6 +24,9 @@ itaojin:
   zookeeper:
     quorum: itaojin105,itaojin106,itaojin107
     port: 2181
+  hive:
+    driver: org.apache.hive.jdbc.HiveDriver
+    preUrl: jdbc:hive2://itaojin106:10000/
 
 
 

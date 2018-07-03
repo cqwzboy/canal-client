@@ -26,4 +26,11 @@ public interface IMysqlService {
      * */
     public ResultSet getColumnResultSet(DataSourceTypeEnum dataSourceType, String schema, String table);
 
+    /**
+     * @desc:根据MySQL中的schema和table生成HiveSQL
+     * @param schema 数据库实例
+     * @param table 表
+     * */
+    String generateHiveSQL(DataSourceTypeEnum dataSourceType, String schema, String table);
+
 }

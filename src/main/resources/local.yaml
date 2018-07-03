@@ -10,14 +10,13 @@ canal:
   # instance
   tjk-destination: tjk
   # 监听表格正则
-  # filter-regex: .*\\..*
   tjk-filter-regex: test\\..*
   # 客户端向服务端拉取数据的时间间隔（毫秒）
   tjk-request-interval: 1000
 
   # ai
   ai-destination: ai
-  ai-filter-regex: .*\\..*
+  ai-filter-regex: test\\..*
   ai-request-interval: 1000
 
   # 支付
@@ -59,8 +58,3 @@ mysql:
 kafka:
   topic: hello
 
-############################ hive ##############################
-hive:
-  driver: org.apache.hive.jdbc.HiveDriver
-  # schema可以动态切换
-  url: jdbc:hive2://itaojin106:10000/

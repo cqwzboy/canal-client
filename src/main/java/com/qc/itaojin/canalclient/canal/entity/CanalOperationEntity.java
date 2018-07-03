@@ -28,6 +28,11 @@ public class CanalOperationEntity {
     private DataSourceTypeEnum ID;
 
     /**
+     * 线程id
+     * */
+    private long threadId;
+
+    /**
      * 库
      * */
     private String schema;
@@ -70,8 +75,9 @@ public class CanalOperationEntity {
     @Data
     public static class Medium extends CanalOperationEntity{
 
-        public Medium(DataSourceTypeEnum ID){
+        public Medium(DataSourceTypeEnum ID, long threadId){
             super.setID(ID);
+            super.setThreadId(threadId);
         }
 
         /**
