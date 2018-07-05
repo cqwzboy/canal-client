@@ -42,7 +42,7 @@ public class KafkaConsumer {
      * */
     private long threadId;
 
-    @KafkaListener(topics = {"itaojin_bigdata"})
+    @KafkaListener(topics = {"hello"})
     public void processMessage(String content) {
         info("consumer message:{}", content);
 

@@ -30,9 +30,9 @@ itaojin:
 
 
 ######################### logging ###########################
-logging:
-  level:
-    com.qc.itaojin.canalclient: DEBUG
-  file: /root/canal-client.log
+#logging:
+#  level:
+#    com.qc.itaojin.canalclient: DEBUG
+#  file: /root/canal-client.log
 
 

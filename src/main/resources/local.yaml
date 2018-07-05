@@ -9,7 +9,7 @@ canal:
   batch-size: 1000
 
   # tjk
-  tjk-destination: ai
+  tjk-destination: tjk
   # 监听表格正则
 #  tjk-filter-regex: .*\\..*
   # 客户端向服务端拉取数据的时间间隔（毫秒）
@@ -36,6 +36,12 @@ canal:
 mysql:
   driver: com.mysql.jdbc.Driver
 
+  # tjk
+  # 缺省schema，程序自动拼接
+#  tjk-url: jdbc:mysql://192.168.4.31:3306/
+#  tjk-user-name: test
+#  tjk-password: test
+
   # ai
   # 缺省schema，程序自动拼接
 #  ai-url: jdbc:mysql://192.168.4.31:3306/
@@ -54,9 +60,9 @@ mysql:
 
   # tjk
   # 缺省schema，程序自动拼接
-  tjk-url: jdbc:mysql://rm-bp1kla8jecwc26f0s9o.mysql.rds.aliyuncs.com:3306/
-  tjk-user-name: canal
-  tjk-password: canal
+  tjk-url: jdbc:mysql://rm-bp127us7d36zxqm7v.mysql.rds.aliyuncs.com:3306/
+  tjk-user-name: tjk_read
+  tjk-password: tjk_only_read
 
   # ai
   # 缺省schema，程序自动拼接
@@ -71,10 +77,11 @@ mysql:
 
   # 工作台
   bench-url: jdbc:mysql://120.55.114.70:3306/
-  bench-user-name: canal
-  bench-password: canal
+  bench-user-name: tjkread
+  bench-password: tjkReadOnly
 
 ############################ kafka ##############################
 kafka:
-  topic: itaojin_bigdata
+  topic: hello
+#  topic: itaojin
 
