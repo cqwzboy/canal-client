@@ -2,7 +2,7 @@ package com.qc.itaojin.canalclient.common.mysql;
 
 import com.qc.itaojin.canalclient.common.config.MysqlConfiguration;
 import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
-import com.qc.itaojin.canalclient.util.StringUtils;
+import com.qc.itaojin.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

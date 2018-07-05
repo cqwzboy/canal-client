@@ -1,6 +1,6 @@
 package com.qc.itaojin.canalclient.common;
 
-import com.qc.itaojin.canalclient.util.StringUtils;
+import com.qc.itaojin.util.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 

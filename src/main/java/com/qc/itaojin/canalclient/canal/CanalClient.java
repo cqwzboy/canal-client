@@ -16,11 +16,10 @@ import com.qc.itaojin.canalclient.enums.CanalOperationTypeEnum;
 import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
 import com.qc.itaojin.canalclient.enums.KeyTypeEnum;
 import com.qc.itaojin.canalclient.mysql.service.IMysqlService;
-import com.qc.itaojin.canalclient.util.BeanUtils;
-import com.qc.itaojin.canalclient.util.JsonUtil;
+import com.qc.itaojin.util.BeanUtils;
+import com.qc.itaojin.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.hadoop.hdfs.security.token.block.DataEncryptionKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 
@@ -65,7 +64,7 @@ public class CanalClient extends Thread {
     /**
      * 过滤正则
      * */
-    private String filterRegex;
+//    private String filterRegex;
     /**
      * 客户端向服务端发送请求的频率
      * */
@@ -90,10 +89,13 @@ public class CanalClient extends Thread {
     }
 
     private void initParams(){
+        if(ID == null){
+            throw new IllegalArgumentException("CanalClient's ID is null");
+        }
         zkServers = zookeeperConfiguration.getZkServers();
         batchSize = canalConfig.getBatchSize();
         destination = canalConfig.getDestination(ID);
-        filterRegex = canalConfig.getFilterRegex(ID);
+//        filterRegex = canalConfig.getFilterRegex(ID);
         requestInterval = canalConfig.getRequestInterval(ID);
         threadId = Thread.currentThread().getId();
     }
@@ -106,7 +108,7 @@ public class CanalClient extends Thread {
         // 创建链接（HA）
         CanalConnector connector = CanalConnectors.newClusterConnector(zkServers, destination, "", "");
         connector.connect();
-        connector.subscribe(filterRegex);
+//        connector.subscribe(filterRegex);
         connector.rollback();
         while (true) {
             // 获取指定数量的数据

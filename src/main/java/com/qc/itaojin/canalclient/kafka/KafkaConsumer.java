@@ -6,10 +6,10 @@ import com.qc.itaojin.canalclient.enums.CanalOperationLevelEnum;
 import com.qc.itaojin.canalclient.enums.CanalOperationTypeEnum;
 import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
 import com.qc.itaojin.canalclient.mysql.service.IMysqlService;
-import com.qc.itaojin.canalclient.util.JsonUtil;
-import com.qc.itaojin.canalclient.util.StringUtils;
 import com.qc.itaojin.service.IHBaseService;
 import com.qc.itaojin.service.IHiveService;
+import com.qc.itaojin.util.JsonUtil;
+import com.qc.itaojin.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -42,7 +42,7 @@ public class KafkaConsumer {
      * */
     private long threadId;
 
-    @KafkaListener(topics = {"hello"})
+    @KafkaListener(topics = {"itaojin_bigdata"})
     public void processMessage(String content) {
         info("consumer message:{}", content);
 

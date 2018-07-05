@@ -1,9 +1,7 @@
 package com.qc.itaojin.canalclient.common.config;
 
 import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
-import com.qc.itaojin.canalclient.util.StringUtils;
-import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
+import com.qc.itaojin.util.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

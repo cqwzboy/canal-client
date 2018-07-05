@@ -1,7 +1,8 @@
 spring:
   profiles:
-    active: dev
+    active: prod
 
 server:
   context-path: /canal-client
   port: 8080
+

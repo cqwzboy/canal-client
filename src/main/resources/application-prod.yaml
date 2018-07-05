@@ -1,9 +1,7 @@
 #kafka
 spring:
   kafka:
-#    bootstrap-servers: 192.168.46.128:9092
-#    bootstrap-servers: itaojin105:9092,itaojin106:9092
-    bootstrap-servers: node1:9092
+    bootstrap-servers: node3:9092,node4:9092,node5:9092,node7:9092,node8:9092
     consumer:
       group-id: 0
       auto-offset-reset: earliest
@@ -17,6 +15,22 @@ spring:
       batch-size: 65536
       buffer-memory: 524288
 
+######################### itaojin ###########################
+itaojin:
+  hbase:
+    master: node3:600000
+  zookeeper:
+    quorum: node4,node7,node8
+    port: 2181
+  hive:
+    driver: org.apache.hive.jdbc.HiveDriver
+    preUrl: jdbc:hive2://node4:10000/
 
+
+######################### logging ###########################
+logging:
+  level:
+    com.qc.itaojin.canalclient: DEBUG
+  file: /root/canal-client/canal-client.log
 
 

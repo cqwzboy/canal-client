@@ -29,5 +29,10 @@ itaojin:
     preUrl: jdbc:hive2://itaojin106:10000/
 
 
+######################### logging ###########################
+logging:
+  level:
+    com.qc.itaojin.canalclient: DEBUG
+  file: /root/canal-client.log
 
 
