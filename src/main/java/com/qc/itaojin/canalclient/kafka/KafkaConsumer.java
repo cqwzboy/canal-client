@@ -42,7 +42,7 @@ public class KafkaConsumer {
      * */
     private long threadId;
 
-    @KafkaListener(topics = {"hello"})
+    @KafkaListener(topics = "hhh")
     public void processMessage(String content) {
         info("consumer message:{}", content);
 

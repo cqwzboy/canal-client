@@ -21,32 +21,32 @@ public class CanalConfiguration extends BaseConfiguration{
     /****************************** tjk ***********************************/
     @Value("${tjk-destination}")
     private String tjkDestination;
-    /*@Value("${tjk-filter-regex}")
-    private String tjkFilterRegex;*/
+    @Value("${tjk-filter-regex}")
+    private String tjkFilterRegex;
     @Value("${tjk-request-interval}")
     private int tjkRequestInterval;
 
     /****************************** ai ***********************************/
     @Value("${ai-destination}")
     private String aiDestination;
-    /*@Value("${ai-filter-regex}")
-    private String aiFilterRegex;*/
+    @Value("${ai-filter-regex}")
+    private String aiFilterRegex;
     @Value("${ai-request-interval}")
     private int aiRequestInterval;
 
     /****************************** 支付 ***********************************/
     @Value("${pay-destination}")
     private String payDestination;
-    /*@Value("${pay-filter-regex}")
-    private String payFilterRegex;*/
+    @Value("${pay-filter-regex}")
+    private String payFilterRegex;
     @Value("${pay-request-interval}")
     private int payRequestInterval;
 
     /****************************** 工作台 ***********************************/
     @Value("${bench-destination}")
     private String benchDestination;
-    /*@Value("${bench-filter-regex}")
-    private String benchFilterRegex;*/
+    @Value("${bench-filter-regex}")
+    private String benchFilterRegex;
     @Value("${bench-request-interval}")
     private int benchRequestInterval;
 
@@ -54,9 +54,9 @@ public class CanalConfiguration extends BaseConfiguration{
         return invoke(dataSourceType, "Destination");
     }
 
-//    public String getFilterRegex(DataSourceTypeEnum dataSourceType){
-//        return invoke(dataSourceType, "FilterRegex");
-//    }
+    public String getFilterRegex(DataSourceTypeEnum dataSourceType){
+        return invoke(dataSourceType, "FilterRegex");
+    }
 
     public int getRequestInterval(DataSourceTypeEnum dataSourceType){
         return invoke(dataSourceType, "RequestInterval");
