@@ -7,20 +7,21 @@ import com.alibaba.otter.canal.protocol.Message;
 import com.qc.itaojin.canalclient.annotation.PrototypeComponent;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity.Medium;
+import com.qc.itaojin.canalclient.canal.entity.ErrorEntity;
+import com.qc.itaojin.canalclient.canal.entity.ProgramCounter;
 import com.qc.itaojin.canalclient.common.Constants;
 import com.qc.itaojin.canalclient.common.Constants.KafkaConstants;
 import com.qc.itaojin.canalclient.common.config.CanalConfiguration;
-import com.qc.itaojin.canalclient.common.config.ZookeeperConfiguration;
-import com.qc.itaojin.canalclient.enums.CanalOperationLevelEnum;
-import com.qc.itaojin.canalclient.enums.CanalOperationTypeEnum;
-import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
-import com.qc.itaojin.canalclient.enums.KeyTypeEnum;
+import com.qc.itaojin.canalclient.enums.*;
 import com.qc.itaojin.canalclient.mysql.service.IMysqlService;
+import com.qc.itaojin.common.ZookeeperFactory;
 import com.qc.itaojin.util.BeanUtils;
 import com.qc.itaojin.util.JsonUtil;
+import com.qc.itaojin.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.ArrayList;
@@ -40,9 +41,13 @@ public class CanalClient extends Thread {
     @Autowired
     private CanalConfiguration canalConfig;
     @Autowired
-    private ZookeeperConfiguration zookeeperConfiguration;
-    @Autowired
     private IMysqlService mysqlService;
+
+    @Value("${itaojin.zookeeper.quorum}")
+    private String quorum;
+
+    @Value("${itaojin.zookeeper.port}")
+    private int port = 2181;
 
     /**
      * canal客户端类型
@@ -76,9 +81,19 @@ public class CanalClient extends Thread {
     private long threadId;
 
     /**
-     * kafka的主题
+     * 正常消费的topic
      * */
-    private String topic = KafkaConstants.TOPIC;
+    private String normalTopic = KafkaConstants.NORMAL_TOPIC;
+
+    /**
+     * 异常信息消费topic
+     * */
+    private String errorTopic = KafkaConstants.ERROR_TOPIC;
+
+    /**
+     * 记录错误重试的计数器
+     * */
+    private ProgramCounter counter = new ProgramCounter();
 
     /**
      * 初始化身份 ID，并返回原对象
@@ -92,7 +107,12 @@ public class CanalClient extends Thread {
         if(ID == null){
             throw new IllegalArgumentException("CanalClient's ID is null");
         }
-        zkServers = zookeeperConfiguration.getZkServers();
+
+        if(StringUtils.isBlank(quorum)){
+            throw new IllegalArgumentException("quorum is null");
+        }
+
+        zkServers = ZookeeperFactory.ParamsParser.parseZKServers(quorum, port);
         batchSize = canalConfig.getBatchSize();
         destination = canalConfig.getDestination(ID);
         filterRegex = canalConfig.getFilterRegex(ID);
@@ -131,7 +151,7 @@ public class CanalClient extends Thread {
 
                 // 执行
                 try {
-                    if(!process(message.getEntries())){
+                    if(!process(message)){
                         flag = false;
                     }
                 } catch (Exception e) {
@@ -152,72 +172,94 @@ public class CanalClient extends Thread {
 
     /**
      * @desc 处理类
-     * @param entrys 数据
+     * @param message 数据
      * */
-    private boolean process(List<Entry> entrys) throws Exception {
-        for (Entry entry : entrys) {
+    private boolean process(Message message) throws Exception {
+        int i = 0;
+        for (Entry entry : message.getEntries()) {
             if (entry.getEntryType() == EntryType.TRANSACTIONBEGIN || entry.getEntryType() == EntryType.TRANSACTIONEND) {
                 continue;
             }
 
-            RowChange rowChage = null;
+            RowChange rowChange = null;
             try {
-                rowChage = RowChange.parseFrom(entry.getStoreValue());
-            } catch (Exception e) {
-                error("ERROR ## parser of eromanga-event has an error , data: {}", entry.toString());
-                e.printStackTrace();
-                return false;
-            }
+                rowChange = RowChange.parseFrom(entry.getStoreValue());
 
-            EventType eventType = rowChage.getEventType();
-            String schema = entry.getHeader().getSchemaName();
-            String table = entry.getHeader().getTableName();
-            String logfileName = entry.getHeader().getLogfileName();
-            long logfileOffset = entry.getHeader().getLogfileOffset();
-            info("================ binlog[{}:{}:{}] , name[{},{}] , eventType : {}",
-                    logfileName,
-                    logfileOffset,
-                    entry.getHeader().getExecuteTime(),
-                    schema,
-                    table,
-                    eventType);
+                EventType eventType = rowChange.getEventType();
+                String schema = entry.getHeader().getSchemaName();
+                String table = entry.getHeader().getTableName();
+                String logfileName = entry.getHeader().getLogfileName();
+                long logfileOffset = entry.getHeader().getLogfileOffset();
 
-            boolean isDdl = rowChage.getIsDdl();
-            info("是否是ddl变更操作: {}", isDdl);
-            info("具体的ddl sql: {}", rowChage.getSql());
-
-            Medium medium = new Medium(ID, threadId);
-            medium.setSchema(schema);
-            medium.setTable(table);
-            medium.setLogfileName(logfileName);
-            medium.setLogfileOffset(logfileOffset);
-            // 生成HBase的rowKey
-            if (!setKeyType(schema, table, medium)) {
-                continue;
-            }
-
-
-            // DDL操作
-            if(isDdl){
-                // TODO
-                medium.setOperationLevel(CanalOperationLevelEnum.TABLE);
-                if(EventType.CREATE == eventType){
-                    medium.setOperationType(CanalOperationTypeEnum.CREATE);
-                }
-                CanalOperationEntity operationEntity = BeanUtils.copyProperties(medium, CanalOperationEntity.class);
-                kafkaTemplate.send(topic, JsonUtil.toJson(operationEntity));
-            }
-            // DML操作
-            else{
-                medium.setOperationLevel(CanalOperationLevelEnum.ROW);
-                List<CanalOperationEntity> list = processRowData(eventType, rowChage.getRowDatasList(), medium);
-
-                // 发布到kafka
-                if(CollectionUtils.isNotEmpty(list)){
-                    for (CanalOperationEntity operationEntity : list) {
-                        kafkaTemplate.send(topic, JsonUtil.toJson(operationEntity));
+                // 一批数据只在首条有效数据时判断
+                if(i == 0){
+                    if(!counter.equalsBy(logfileName, logfileOffset)){
+                        counter.set(logfileName, logfileOffset);
+                        counter.reset();
+                    }else{
+                        counter.plus();
                     }
                 }
+                i++;
+
+                info("================ binlog[{}:{}:{}] , name[{},{}] , eventType : {}",
+                        logfileName,
+                        logfileOffset,
+                        entry.getHeader().getExecuteTime(),
+                        schema,
+                        table,
+                        eventType);
+
+                boolean isDdl = rowChange.getIsDdl();
+                info("是否是ddl变更操作: {}", isDdl);
+                info("具体的ddl sql: {}", rowChange.getSql());
+
+                Medium medium = new Medium(ID, threadId);
+                medium.setSchema(schema);
+                medium.setTable(table);
+                medium.setLogfileName(logfileName);
+                medium.setLogfileOffset(logfileOffset);
+                // 生成HBase的rowKey
+                if (!setKeyType(schema, table, medium)) {
+                    continue;
+                }
+
+                // DDL操作
+                if(isDdl){
+                    medium.setOperationLevel(CanalOperationLevelEnum.TABLE);
+                    if(EventType.CREATE == eventType){
+                        medium.setOperationType(CanalOperationTypeEnum.CREATE);
+                    }
+                    CanalOperationEntity operationEntity = BeanUtils.copyProperties(medium, CanalOperationEntity.class);
+                    kafkaTemplate.send(normalTopic, JsonUtil.toJson(operationEntity));
+                }
+                // DML操作
+                else{
+                    medium.setOperationLevel(CanalOperationLevelEnum.ROW);
+                    List<CanalOperationEntity> list = processRowData(eventType, rowChange.getRowDatasList(), medium);
+
+                    // 发布到kafka
+                    if(CollectionUtils.isNotEmpty(list)){
+                        for (CanalOperationEntity operationEntity : list) {
+                            kafkaTemplate.send(normalTopic, JsonUtil.toJson(operationEntity));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                error("ERROR ## parser of eromanga-event has an error , data: {}, begin retry, error info would be recorded after {} retry times",
+                        entry.toString(), Constants.RETRY_NUMBER);
+                e.printStackTrace();
+                // 超过试错次数
+                if(counter.isUpperLimit(Constants.RETRY_NUMBER)){
+                    log.error("canal客户端异常次数已超上限");
+                    // 让canal client 提交ack确认，系统记录错误，客户端继续消费后面的消息
+                    ErrorEntity errorEntity = new ErrorEntity(ErrorTypeEnum.CANAL_LISTEN);
+                    errorEntity.setBizJson(JsonUtil.toJson(message));
+                    errorEntity.setStackError(e.getMessage());
+                    kafkaTemplate.send(errorTopic, JsonUtil.toJson(errorEntity));
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -255,67 +297,71 @@ public class CanalClient extends Thread {
      * @return List<CanalOperationEntity> 封装类集合
      * */
     private List<CanalOperationEntity> processRowData(EventType eventType, List<RowData> rowDataList, Medium medium) throws Exception{
-        List<CanalOperationEntity> reList = new ArrayList<>();
+        try{
+            List<CanalOperationEntity> reList = new ArrayList<>();
 
-        if(CollectionUtils.isEmpty(rowDataList)){
+            if(CollectionUtils.isEmpty(rowDataList)){
+                return reList;
+            }
+
+            List<Column> columns;
+
+            for (RowData rowData : rowDataList) {
+                CanalOperationEntity operationEntity = BeanUtils.copyProperties(medium, CanalOperationEntity.class);
+
+                // 删除
+                if (eventType == EventType.DELETE) {
+                    // 设置HBase的rowKey
+                    operationEntity.setRowKey(genRowKey(medium.getPks(), rowData.getBeforeColumnsList()));
+                    operationEntity.setOperationType(CanalOperationTypeEnum.DELETE);
+                }
+                // 增加
+                else if (eventType == EventType.INSERT) {
+                    // 设置HBase的rowKey
+                    operationEntity.setRowKey(genRowKey(medium.getPks(), rowData.getAfterColumnsList()));
+
+                    operationEntity.setOperationType(CanalOperationTypeEnum.CREATE);
+
+                    columns = rowData.getAfterColumnsList();
+                    Map<String, String> columnsMap = new HashMap<>();
+                    for (Column column : columns) {
+                        String columnName = column.getName();
+                        String columnValue = column.getValue();
+                        info("{} : {} : update={}", columnName, columnValue, column.getUpdated());
+                        if(needAdd(medium.getPks(), medium.getKeyType(), columnName, CanalOperationTypeEnum.CREATE, true)){
+                            columnsMap.put(columnName, columnValue);
+                        }
+                    }
+                    operationEntity.setColumnsMap(columnsMap);
+                }
+                // 修改
+                else {
+                    // 设置HBase的rowKey
+                    operationEntity.setRowKey(genRowKey(medium.getPks(), rowData.getAfterColumnsList()));
+
+                    operationEntity.setOperationType(CanalOperationTypeEnum.UPDATE);
+
+                    columns = rowData.getAfterColumnsList();
+                    Map<String, String> columnsMap = new HashMap<>();
+                    for (Column column : columns) {
+                        String columnName = column.getName();
+                        String columnValue = column.getValue();
+                        boolean updated = column.getUpdated();
+                        info("{} : {} : update={}", columnName, columnValue, updated);
+                        if(needAdd(medium.getPks(), medium.getKeyType(), columnName, CanalOperationTypeEnum.UPDATE, updated)){
+                            columnsMap.put(columnName, columnValue);
+                        }
+                    }
+                    operationEntity.setColumnsMap(columnsMap);
+                }
+
+                reList.add(operationEntity);
+            }
+
             return reList;
+        }catch (Exception e){
+            throw new Exception(e);
         }
-
-        List<Column> columns;
-
-        for (RowData rowData : rowDataList) {
-            CanalOperationEntity operationEntity = BeanUtils.copyProperties(medium, CanalOperationEntity.class);
-
-            // 删除
-            if (eventType == EventType.DELETE) {
-                // 设置HBase的rowKey
-                operationEntity.setRowKey(genRowKey(medium.getPks(), rowData.getBeforeColumnsList()));
-                operationEntity.setOperationType(CanalOperationTypeEnum.DELETE);
-            }
-            // 增加
-            else if (eventType == EventType.INSERT) {
-                // 设置HBase的rowKey
-                operationEntity.setRowKey(genRowKey(medium.getPks(), rowData.getAfterColumnsList()));
-
-                operationEntity.setOperationType(CanalOperationTypeEnum.CREATE);
-
-                columns = rowData.getAfterColumnsList();
-                Map<String, String> columnsMap = new HashMap<>();
-                for (Column column : columns) {
-                    String columnName = column.getName();
-                    String columnValue = column.getValue();
-                    info("{} : {} : update={}", columnName, columnValue, column.getUpdated());
-                    if(needAdd(medium.getPks(), medium.getKeyType(), columnName, CanalOperationTypeEnum.CREATE, true)){
-                        columnsMap.put(columnName, columnValue);
-                    }
-                }
-                operationEntity.setColumnsMap(columnsMap);
-            }
-            // 修改
-            else {
-                // 设置HBase的rowKey
-                operationEntity.setRowKey(genRowKey(medium.getPks(), rowData.getAfterColumnsList()));
-
-                operationEntity.setOperationType(CanalOperationTypeEnum.UPDATE);
-
-                columns = rowData.getAfterColumnsList();
-                Map<String, String> columnsMap = new HashMap<>();
-                for (Column column : columns) {
-                    String columnName = column.getName();
-                    String columnValue = column.getValue();
-                    boolean updated = column.getUpdated();
-                    info("{} : {} : update={}", columnName, columnValue, updated);
-                    if(needAdd(medium.getPks(), medium.getKeyType(), columnName, CanalOperationTypeEnum.UPDATE, updated)){
-                        columnsMap.put(columnName, columnValue);
-                    }
-                }
-                operationEntity.setColumnsMap(columnsMap);
-            }
-
-            reList.add(operationEntity);
-        }
-
-        return reList;
     }
 
     /**

@@ -54,6 +54,14 @@ public class MysqlConfiguration extends BaseConfiguration{
     @Value("${bench-password}")
     private String benchPassword;
 
+    /******************************** 系统自用数据库，必有！ ********************************/
+    @Value("${biz-url}")
+    private String bizUrl;
+    @Value("${biz-user-name}")
+    private String bizUserName;
+    @Value("${biz-password}")
+    private String bizPassword;
+
     public String getUrl(DataSourceTypeEnum dataSourceTyp){
         return invoke(dataSourceTyp, "Url");
     }

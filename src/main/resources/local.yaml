@@ -1,8 +1,3 @@
-############################  zookeeper ##############################
-zookeeper:
-  servers: itaojin105:2181,itaojin106:2181,itaojin107:2181
-#  servers: node4:2181,node7:2181,node8:2181
-
 ############################  canal的配置 ##############################
 canal:
   # canal客户端向server抓取数据的数据
@@ -11,7 +6,7 @@ canal:
   # tjk
   tjk-destination: tjk
   # 监听表格正则
-  tjk-filter-regex: .*\\..*
+  tjk-filter-regex: test\\..*
   # 客户端向服务端拉取数据的时间间隔（毫秒）
   tjk-request-interval: 1000
 
@@ -81,4 +76,9 @@ mysql:
 #  bench-url: jdbc:mysql://120.55.114.70:3306/
 #  bench-user-name: tjkread
 #  bench-password: tjkReadOnly
+
+  # 自身系统使用的数据库，必有
+  biz-url: jdbc:mysql://192.168.4.31:3306/tjk_bigdata
+  biz-user-name: test
+  biz-password: test
 

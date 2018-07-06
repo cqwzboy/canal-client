@@ -1,8 +1,7 @@
 #kafka
 spring:
   kafka:
-#    bootstrap-servers: node3:9092,node4:9092,node5:9092,node7:9092,node8:9092
-    bootstrap-servers: 192.168.1.105:9092,192.168.1.106:9092
+    bootstrap-servers: node3:9092,node4:9092,node5:9092,node7:9092,node8:9092
     consumer:
       group-id: 0
       auto-offset-reset: earliest

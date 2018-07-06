@@ -48,9 +48,9 @@ public class CanalClientStarter implements ApplicationListener<ContextRefreshedE
         watcherRegister.setPath(path);
         List<CanalClient> tasks = new ArrayList<>();
         tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.TJK));
-        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.PAY));
-        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.AI));
-        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.BENCH));
+//        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.PAY));
+//        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.AI));
+//        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.BENCH));
         // 需被唤醒的任务
         watcherRegister.setTasks(tasks);
 

@@ -14,6 +14,11 @@ public class Constants {
     public static final String LOG_TEMPLATE = "[ %d ] [ %s ] %s";
 
     /**
+     * canal客户端试错次数
+     * */
+    public static final int RETRY_NUMBER = 5;
+
+    /**
      * Hive相关的常量
      * */
     public interface HiveConstants{
@@ -28,9 +33,14 @@ public class Constants {
      * */
     public interface KafkaConstants{
         /**
-         * topic
+         * normal_topic
          * */
-        String TOPIC = "hhh";
+        String NORMAL_TOPIC = "itaojin_bigdata";
+
+        /**
+         * error_topic
+         * */
+        String ERROR_TOPIC = "errorLog";
     }
 
 }
