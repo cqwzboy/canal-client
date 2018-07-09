@@ -31,6 +31,6 @@ itaojin:
 logging:
   level:
     com.qc.itaojin.canalclient: DEBUG
-  file: /usr/local/src/canal_client/canal-client.log
+  file: /usr/local/src/canal_client/logs/canal-client.log
 
 
