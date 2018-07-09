@@ -7,7 +7,6 @@ import com.qc.itaojin.common.ItaojinZKConstants;
 import com.qc.itaojin.common.WatcherRegister;
 import com.qc.itaojin.entity.ZKNodeInfoWrapper;
 import com.qc.itaojin.service.IZookeeperService;
-import com.qc.itaojin.util.InetAddressUtil;
 import com.qc.itaojin.util.JsonUtil;
 import com.qc.itaojin.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -48,9 +47,9 @@ public class CanalClientStarter implements ApplicationListener<ContextRefreshedE
         watcherRegister.setPath(path);
         List<CanalClient> tasks = new ArrayList<>();
         tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.TJK));
-//        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.PAY));
-//        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.AI));
-//        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.BENCH));
+        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.PAY));
+        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.AI));
+        tasks.add(ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(DataSourceTypeEnum.BENCH));
         // 需被唤醒的任务
         watcherRegister.setTasks(tasks);
 

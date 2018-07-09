@@ -1,7 +1,7 @@
 #kafka
 spring:
   kafka:
-    bootstrap-servers: node3:9092,node4:9092,node5:9092,node7:9092,node8:9092
+    bootstrap-servers: node2:9092,node3:9092,node4:9092
     consumer:
       group-id: 0
       auto-offset-reset: earliest
@@ -18,19 +18,19 @@ spring:
 ######################### itaojin ###########################
 itaojin:
   hbase:
-    master: node3:600000
+    master: node2:600000
   zookeeper:
-    quorum: node4,node7,node8
+    quorum: node2,node3,node4
     port: 2181
   hive:
     driver: org.apache.hive.jdbc.HiveDriver
-    preUrl: jdbc:hive2://node4:10000/
+    preUrl: jdbc:hive2://node3:10000/
 
 
 ######################### logging ###########################
 logging:
   level:
     com.qc.itaojin.canalclient: DEBUG
-  file: /root/canal-client/canal-client.log
+  file: /usr/local/src/canal_client/canal-client.log
 
 
