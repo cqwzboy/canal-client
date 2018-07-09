@@ -18,6 +18,11 @@ import java.util.Map;
 public class CanalOperationEntity {
 
     /**
+     * Canal Server Batch ID
+     * */
+    private long batchId;
+
+    /**
      * HBase Row Key
      * */
     private String rowKey;

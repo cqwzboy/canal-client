@@ -1,6 +1,6 @@
-package com.qc.itaojin.canalclient.canal.entity;
+package com.qc.itaojin.canalclient.canal.counter;
 
-import com.qc.itaojin.util.StringUtils;
+import com.qc.itaojin.canalclient.common.Counter;
 import lombok.Data;
 import lombok.ToString;
 
@@ -11,7 +11,7 @@ import lombok.ToString;
  */
 @Data
 @ToString
-public class ProgramCounter {
+public class CanalCounter extends Counter {
 
     /**
      * 上一批次首位有效数据的binlog名称
@@ -23,12 +23,7 @@ public class ProgramCounter {
      * */
     private long preBinLogOffset;
 
-    /**
-     * 已尝试次数
-     * */
-    private int count;
-
-    public ProgramCounter(){
+    public CanalCounter(){
         this.preBinLogFileName = "";
         this.preBinLogOffset = -1;
     }
@@ -36,8 +31,18 @@ public class ProgramCounter {
     /**
      * 判断给定条件与当前对象持有信息是否相同
      */
-    public boolean equalsBy(String binLogFileName, long binLogOffset){
-        if(StringUtils.isBlank(binLogFileName) || binLogOffset<0){
+    @Override
+    public boolean equalsBy(Object... args){
+        if(args==null || args.length<=0){
+            return false;
+        }
+
+        String binLogFileName;
+        long binLogOffset;
+        try{
+            binLogFileName = (String) args[0];
+            binLogOffset = (long) args[1];
+        }catch (Exception e){
             return false;
         }
 
@@ -46,27 +51,6 @@ public class ProgramCounter {
         }
 
         return false;
-    }
-
-    /**
-     * 重置计数器
-     * */
-    public void reset(){
-        this.count  = 1;
-    }
-
-    /**
-     * 计数器加1
-     * */
-    public void plus(){
-        this.count ++;
-    }
-
-    /**
-     * 次数是否达到规定次数
-     * */
-    public boolean isUpperLimit(int upperLimit){
-        return this.count > upperLimit;
     }
 
     /**

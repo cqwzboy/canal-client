@@ -5,10 +5,11 @@ import com.alibaba.otter.canal.client.CanalConnectors;
 import com.alibaba.otter.canal.protocol.CanalEntry.*;
 import com.alibaba.otter.canal.protocol.Message;
 import com.qc.itaojin.canalclient.annotation.PrototypeComponent;
+import com.qc.itaojin.canalclient.canal.counter.CanalCounter;
+import com.qc.itaojin.canalclient.canal.entity.CanalMessage;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity.Medium;
 import com.qc.itaojin.canalclient.canal.entity.ErrorEntity;
-import com.qc.itaojin.canalclient.canal.entity.ProgramCounter;
 import com.qc.itaojin.canalclient.common.Constants;
 import com.qc.itaojin.canalclient.common.Constants.KafkaConstants;
 import com.qc.itaojin.canalclient.common.config.CanalConfiguration;
@@ -93,7 +94,7 @@ public class CanalClient extends Thread {
     /**
      * 记录错误重试的计数器
      * */
-    private ProgramCounter counter = new ProgramCounter();
+    private CanalCounter counter = new CanalCounter();
 
     /**
      * 初始化身份 ID，并返回原对象
@@ -215,6 +216,7 @@ public class CanalClient extends Thread {
                 info("具体的ddl sql: {}", rowChange.getSql());
 
                 Medium medium = new Medium(ID, threadId);
+                medium.setBatchId(message.getId());
                 medium.setSchema(schema);
                 medium.setTable(table);
                 medium.setLogfileName(logfileName);
@@ -254,7 +256,7 @@ public class CanalClient extends Thread {
                     log.error("canal客户端异常次数已超上限");
                     // 让canal client 提交ack确认，系统记录错误，客户端继续消费后面的消息
                     ErrorEntity errorEntity = new ErrorEntity(ErrorTypeEnum.CANAL_LISTEN);
-                    errorEntity.setBizJson(JsonUtil.toJson(message));
+                    errorEntity.setBizJson(JsonUtil.toJson(CanalMessage.build(message)));
                     errorEntity.setStackError(e.getMessage());
                     kafkaTemplate.send(errorTopic, JsonUtil.toJson(errorEntity));
                     return true;

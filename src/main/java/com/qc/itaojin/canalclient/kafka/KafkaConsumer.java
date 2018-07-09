@@ -1,5 +1,6 @@
 package com.qc.itaojin.canalclient.kafka;
 
+import com.qc.itaojin.canalclient.canal.counter.kafkaCounter;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity;
 import com.qc.itaojin.canalclient.canal.entity.ErrorEntity;
 import com.qc.itaojin.canalclient.common.Constants;
@@ -7,7 +8,6 @@ import com.qc.itaojin.canalclient.enums.CanalOperationLevelEnum;
 import com.qc.itaojin.canalclient.enums.CanalOperationTypeEnum;
 import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
 import com.qc.itaojin.canalclient.enums.ErrorTypeEnum;
-import com.qc.itaojin.canalclient.mysql.service.IErrorLogService;
 import com.qc.itaojin.canalclient.mysql.service.IMysqlService;
 import com.qc.itaojin.service.IHBaseService;
 import com.qc.itaojin.service.IHiveService;
@@ -22,8 +22,8 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * @desc kafka消费类
  * @author fuqinqin
+ * @desc kafka消费类
  * @date 2018-07-03
  */
 @Component
@@ -38,33 +38,28 @@ public class KafkaConsumer {
     private IMysqlService mysqlService;
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
-    @Autowired
-    private IErrorLogService errorLogService;
 
     /**
      * 物理数据库业务类型
-     * */
+     */
     private DataSourceTypeEnum ID;
     /**
      * 线程ID
-     * */
+     */
     private long threadId;
 
-    @KafkaListener(topics = "errorLog")
-    public void logError(String error){
-        info("consumer message:{}", error);
-
-        ErrorEntity errorEntity = JsonUtil.parse(error, ErrorEntity.class);
-        errorLogService.insert(errorEntity);
-        log.info("记录错误日志成功！");
-    }
+    /**
+     * 记录错误重试的计数器
+     */
+    private kafkaCounter counter = new kafkaCounter();
 
     @KafkaListener(topics = "itaojin_bigdata")
     public void processMessage(String content) {
         info("consumer message:{}", content);
 
-        try{
-            CanalOperationEntity operationEntity = JsonUtil.parse(content, CanalOperationEntity.class);
+        CanalOperationEntity operationEntity = null;
+        try {
+            operationEntity = JsonUtil.parse(content, CanalOperationEntity.class);
 
             // DDL/DML
             CanalOperationLevelEnum operationLevelEnum = operationEntity.getOperationLevel();
@@ -78,27 +73,27 @@ public class KafkaConsumer {
             threadId = operationEntity.getThreadId();
 
             //DDL
-            if(CanalOperationLevelEnum.TABLE.equalsTo(operationLevelEnum)){
+            if (CanalOperationLevelEnum.TABLE.equalsTo(operationLevelEnum)) {
                 // create table
-                if(CanalOperationTypeEnum.CREATE.equalsTo(operationTypeEnum)){
+                if (CanalOperationTypeEnum.CREATE.equalsTo(operationTypeEnum)) {
                     // 生成HiveSQL
                     String hiveSQL = mysqlService.generateHiveSQL(ID, schema, table);
                     info("新建Hive和HBase关联表，HiveSQL={}", hiveSQL);
-                    if(StringUtils.isBlank(hiveSQL)){
+                    if (StringUtils.isBlank(hiveSQL)) {
                         return;
                     }
                     String hiveSchema = buildSchema(ID, schema);
-                    if(StringUtils.isBlank(hiveSchema) || !hiveService.init(hiveSchema, table, hiveSQL)){
+                    if (StringUtils.isBlank(hiveSchema) || !hiveService.init(hiveSchema, table, hiveSQL)) {
                         info("初始化Hive仓库失败，buildHiveSchema={}, table={}, hiveSQL={}", hiveSchema, table, hiveSQL);
-                        // TODO 此处记录异常，为人工维护提供数据支持
-                        return;
+                        // 此处记录异常，为人工维护提供数据支持
+                        throw new Exception(String.format("初始化Hive仓库失败，buildHiveSchema=%s, table=%s, hiveSQL=%s", hiveSchema, table, hiveSQL));
                     }
 
-                    info("初始化Hive仓库成功！buildHiveSchema={}, table={}, hiveSQL={}", hiveSchema, table, hiveSQL);
+                    info("初始化Hive仓库成功！buildHiveSchema={}, table={}", hiveSchema, table);
                 }
             }
             // DML
-            else{
+            else {
                 // 命名空间
                 String nameSpace = buildSchema(ID, schema);
                 // HBase行键
@@ -106,47 +101,65 @@ public class KafkaConsumer {
                 // 变化数据集
                 Map<String, String> columnsMap = operationEntity.getColumnsMap();
                 // 删除
-                if(CanalOperationTypeEnum.DELETE.equalsTo(operationTypeEnum)){
-                    if(!hBaseService.delete(nameSpace, table, rowKey)){
+                if (CanalOperationTypeEnum.DELETE.equalsTo(operationTypeEnum)) {
+                    if (!hBaseService.delete(nameSpace, table, rowKey)) {
                         info("删除一行数据失败，nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
                         return;
                     }
                     info("删除一行数据成功！nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
                 }
                 // 添加/修改
-                else{
-                    if(!hBaseService.update(nameSpace, table, rowKey, columnsMap)){
-                        if(CanalOperationTypeEnum.CREATE.equalsTo(operationTypeEnum)){
+                else {
+                    if (!hBaseService.update(nameSpace, table, rowKey, columnsMap)) {
+                        if (CanalOperationTypeEnum.CREATE.equalsTo(operationTypeEnum)) {
                             info("新增数据失败，nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
-                        }else{
+                        } else {
                             info("修改数据失败，nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
                         }
                         return;
                     }
 
-                    if(CanalOperationTypeEnum.CREATE.equalsTo(operationTypeEnum)){
+                    if (CanalOperationTypeEnum.CREATE.equalsTo(operationTypeEnum)) {
                         info("新增数据成功！nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
-                    }else{
+                    } else {
                         info("修改数据成功！nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
                     }
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
 
-            // 记录错误信息
-            ErrorEntity errorEntity = new ErrorEntity(ErrorTypeEnum.KAFKA_CONSUME);
-            errorEntity.setBizJson(content);
-            errorEntity.setStackError(e.getMessage());
-            kafkaTemplate.send(Constants.KafkaConstants.ERROR_TOPIC, JsonUtil.toJson(errorEntity));
+            // 判重
+            if (operationEntity != null) {
+                if (!counter.equalsBy(operationEntity.getBatchId())) {
+                    counter.set(operationEntity.getBatchId());
+                    counter.reset();
+                } else {
+                    counter.plus();
+                }
+            } else {
+                counter.plus();
+            }
+
+            // 超过试错次数
+            if (!counter.isUpperLimit(Constants.RETRY_NUMBER)) {
+                log.error("kafka消费端异常次数未超上限，继续重试。。。");
+                processMessage(content);
+            } else {
+                // 记录错误信息
+                ErrorEntity errorEntity = new ErrorEntity(ErrorTypeEnum.KAFKA_CONSUME);
+                errorEntity.setBizJson(content);
+                errorEntity.setStackError(e.getMessage());
+                kafkaTemplate.send(Constants.KafkaConstants.ERROR_TOPIC, JsonUtil.toJson(errorEntity));
+            }
         }
     }
 
     /**
      * 构建hive仓库的schema
-     * */
-    private String buildSchema(DataSourceTypeEnum dataSourceType, String schema){
-        if(dataSourceType==null || StringUtils.isBlank(schema)){
+     */
+    private String buildSchema(DataSourceTypeEnum dataSourceType, String schema) {
+        if (dataSourceType == null || StringUtils.isBlank(schema)) {
             return null;
         }
 
@@ -160,18 +173,21 @@ public class KafkaConsumer {
 
     /**
      * 多线程间个性输出日志
-     * */
-    private void info(String content, Object... objects){
-        log.info(String.format(Constants.LOG_TEMPLATE, threadId, ID==null?null:ID.name(), content), objects);
+     */
+    private void info(String content, Object... objects) {
+        log.info(String.format(Constants.LOG_TEMPLATE, threadId, ID == null ? null : ID.name(), content), objects);
     }
-    private void error(String content, Object... objects){
-        log.error(String.format(Constants.LOG_TEMPLATE, threadId, ID==null?null:ID.name(), content), objects);
+
+    private void error(String content, Object... objects) {
+        log.error(String.format(Constants.LOG_TEMPLATE, threadId, ID == null ? null : ID.name(), content), objects);
     }
-    private void debug(String content, Object... objects){
-        log.debug(String.format(Constants.LOG_TEMPLATE, threadId, ID==null?null:ID.name(), content), objects);
+
+    private void debug(String content, Object... objects) {
+        log.debug(String.format(Constants.LOG_TEMPLATE, threadId, ID == null ? null : ID.name(), content), objects);
     }
-    private void warn(String content, Object... objects){
-        log.warn(String.format(Constants.LOG_TEMPLATE, threadId, ID==null?null:ID.name(), content), objects);
+
+    private void warn(String content, Object... objects) {
+        log.warn(String.format(Constants.LOG_TEMPLATE, threadId, ID == null ? null : ID.name(), content), objects);
     }
 
 }
