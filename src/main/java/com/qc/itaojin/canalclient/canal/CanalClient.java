@@ -4,7 +4,7 @@ import com.alibaba.otter.canal.client.CanalConnector;
 import com.alibaba.otter.canal.client.CanalConnectors;
 import com.alibaba.otter.canal.protocol.CanalEntry.*;
 import com.alibaba.otter.canal.protocol.Message;
-import com.qc.itaojin.canalclient.annotation.PrototypeComponent;
+import com.qc.itaojin.annotation.PrototypeComponent;
 import com.qc.itaojin.canalclient.canal.counter.CanalCounter;
 import com.qc.itaojin.canalclient.canal.entity.CanalMessage;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity;
