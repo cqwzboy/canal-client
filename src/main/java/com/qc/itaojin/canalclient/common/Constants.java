@@ -19,14 +19,9 @@ public class Constants {
     public static final int RETRY_NUMBER = 5;
 
     /**
-     * Hive相关的常量
+     * Canal HA 临时节点路径
      * */
-    public interface HiveConstants{
-        /**
-         * 默认数据库
-         * */
-        String DEFAULT_SCHEMA = "default";
-    }
+    public static final String EPHEMERAL_PATH = "/itaojin/qc/canal-client/running";
 
     /**
      * kafka相关常量

@@ -10,6 +10,7 @@ import com.qc.itaojin.canalclient.canal.entity.CanalMessage;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity.Medium;
 import com.qc.itaojin.canalclient.canal.entity.ErrorEntity;
+import com.qc.itaojin.canalclient.common.ApplicationContextHolder;
 import com.qc.itaojin.canalclient.common.Constants;
 import com.qc.itaojin.canalclient.common.Constants.KafkaConstants;
 import com.qc.itaojin.canalclient.common.config.CanalConfiguration;
@@ -24,6 +25,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.util.Assert;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -438,5 +440,26 @@ public class CanalClient extends Thread {
     }
     private void warn(String content, Object... objects){
         log.warn(String.format(Constants.LOG_TEMPLATE, threadId, ID.name(), content), objects);
+    }
+
+    /**
+     * 工厂类
+     * */
+    public static class CanalClientFactory{
+        public static CanalClient get(DataSourceTypeEnum dataSourceType){
+            Assert.notNull(dataSourceType, "dataSourceType must not be null");
+            return ApplicationContextHolder.getBean("canalClient", CanalClient.class).init(dataSourceType);
+        }
+
+        public static List<CanalClient> get(List<DataSourceTypeEnum> dataSourceTypeList){
+            Assert.notEmpty(dataSourceTypeList, "dataSourceTypeList must not be empty");
+
+            List<CanalClient> _list = new ArrayList<>();
+            for (DataSourceTypeEnum dataSourceTypeEnum : dataSourceTypeList) {
+                _list.add(get(dataSourceTypeEnum));
+            }
+
+            return _list;
+        }
     }
 }
