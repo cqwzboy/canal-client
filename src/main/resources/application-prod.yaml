@@ -18,7 +18,10 @@ spring:
 ######################### itaojin ###########################
 itaojin:
   hbase:
-    master: node2:600000
+    # 如果指定了master，则按照非高可用HBase的形式创建连接，反之则按照HA形式创建
+#    master: node2:600000
+    # 默认为 /hbase
+    parent: /hbase
   zookeeper:
     quorum: node2,node3,node4
     port: 2181
