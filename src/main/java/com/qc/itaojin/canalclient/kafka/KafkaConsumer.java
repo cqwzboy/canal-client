@@ -9,11 +9,14 @@ import com.qc.itaojin.canalclient.enums.CanalOperationTypeEnum;
 import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
 import com.qc.itaojin.canalclient.enums.ErrorTypeEnum;
 import com.qc.itaojin.canalclient.mysql.service.IMysqlService;
+import com.qc.itaojin.common.HBaseErrorCode;
+import com.qc.itaojin.exception.ItaojinHBaseException;
 import com.qc.itaojin.service.IHBaseService;
 import com.qc.itaojin.service.IHiveService;
 import com.qc.itaojin.util.JsonUtil;
 import com.qc.itaojin.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.hbase.TableNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -58,6 +61,8 @@ public class KafkaConsumer {
         info("consumer message:{}", content);
 
         CanalOperationEntity operationEntity = null;
+        String schema = null;
+        String table = null;
         try {
             operationEntity = JsonUtil.parse(content, CanalOperationEntity.class);
 
@@ -66,9 +71,9 @@ public class KafkaConsumer {
             // 增删改
             CanalOperationTypeEnum operationTypeEnum = operationEntity.getOperationType();
             // schema
-            String schema = operationEntity.getSchema();
+            schema = operationEntity.getSchema();
             // table
-            String table = operationEntity.getTable();
+            table = operationEntity.getTable();
             ID = operationEntity.getID();
             threadId = operationEntity.getThreadId();
 
@@ -76,20 +81,7 @@ public class KafkaConsumer {
             if (CanalOperationLevelEnum.TABLE.equalsTo(operationLevelEnum)) {
                 // create table
                 if (CanalOperationTypeEnum.CREATE.equalsTo(operationTypeEnum)) {
-                    // 生成HiveSQL
-                    String hiveSQL = mysqlService.generateHiveSQL(ID, schema, table);
-                    info("新建Hive和HBase关联表，HiveSQL={}", hiveSQL);
-                    if (StringUtils.isBlank(hiveSQL)) {
-                        return;
-                    }
-                    String hiveSchema = buildSchema(ID, schema);
-                    if (StringUtils.isBlank(hiveSchema) || !hiveService.init(hiveSchema, table, hiveSQL)) {
-                        info("初始化Hive仓库失败，buildHiveSchema={}, table={}, hiveSQL={}", hiveSchema, table, hiveSQL);
-                        // 此处记录异常，为人工维护提供数据支持
-                        throw new Exception(String.format("初始化Hive仓库失败，buildHiveSchema=%s, table=%s, hiveSQL=%s", hiveSchema, table, hiveSQL));
-                    }
-
-                    info("初始化Hive仓库成功！buildHiveSchema={}, table={}", hiveSchema, table);
+                    initSchema(schema, table);
                 }
             }
             // DML
@@ -102,23 +94,12 @@ public class KafkaConsumer {
                 Map<String, String> columnsMap = operationEntity.getColumnsMap();
                 // 删除
                 if (CanalOperationTypeEnum.DELETE.equalsTo(operationTypeEnum)) {
-                    if (!hBaseService.delete(nameSpace, table, rowKey)) {
-                        info("删除一行数据失败，nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
-                        return;
-                    }
+                    hBaseService.delete(nameSpace, table, rowKey);
                     info("删除一行数据成功！nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
                 }
                 // 添加/修改
                 else {
-                    if (!hBaseService.update(nameSpace, table, rowKey, columnsMap)) {
-                        if (CanalOperationTypeEnum.CREATE.equalsTo(operationTypeEnum)) {
-                            info("新增数据失败，nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
-                        } else {
-                            info("修改数据失败，nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
-                        }
-                        return;
-                    }
-
+                    hBaseService.update(nameSpace, table, rowKey, columnsMap);
                     if (CanalOperationTypeEnum.CREATE.equalsTo(operationTypeEnum)) {
                         info("新增数据成功！nameSpace={}, table={}, rowKey={}", nameSpace, table, rowKey);
                     } else {
@@ -144,6 +125,24 @@ public class KafkaConsumer {
             // 超过试错次数
             if (!counter.isUpperLimit(Constants.RETRY_NUMBER)) {
                 log.error("kafka消费端异常次数未超上限，继续重试。。。");
+
+                // HBase异常
+                if(e instanceof ItaojinHBaseException){
+                    ItaojinHBaseException hBaseException = (ItaojinHBaseException) e;
+                    // table not exists
+                    int errorCode = hBaseException.getErrorCode();
+                    // 由于在初始化时由于网络延迟等原因漏掉一部分表的初始化，在这里重新初始化
+                    if(errorCode == HBaseErrorCode.TABLE_NOT_FOUND){
+                        log.info("表格{}:{}不存在，重建！", schema, table);
+                        try {
+                            initSchema(schema, table);
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                            counter.plus();
+                        }
+                    }
+                }
+
                 processMessage(content);
             } else {
                 // 记录错误信息
@@ -153,6 +152,26 @@ public class KafkaConsumer {
                 kafkaTemplate.send(Constants.KafkaConstants.ERROR_TOPIC, JsonUtil.toJson(errorEntity));
             }
         }
+    }
+
+    /**
+     * 初始化Hive和HBase关联表
+     * */
+    private void initSchema(String schema, String table) throws Exception {
+        // 生成HiveSQL
+        String hiveSQL = mysqlService.generateHiveSQL(ID, schema, table);
+        info("新建Hive和HBase关联表，HiveSQL={}", hiveSQL);
+        if (StringUtils.isBlank(hiveSQL)) {
+            return;
+        }
+        String hiveSchema = buildSchema(ID, schema);
+        if (StringUtils.isBlank(hiveSchema) || !hiveService.init(hiveSchema, table, hiveSQL)) {
+            info("初始化Hive仓库失败，buildHiveSchema={}, table={}, hiveSQL={}", hiveSchema, table, hiveSQL);
+            // 此处记录异常，为人工维护提供数据支持
+            throw new Exception(String.format("初始化Hive仓库失败，buildHiveSchema=%s, table=%s, hiveSQL=%s", hiveSchema, table, hiveSQL));
+        }
+
+        info("初始化Hive仓库成功！buildHiveSchema={}, table={}", hiveSchema, table);
     }
 
     /**

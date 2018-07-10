@@ -33,7 +33,7 @@
         <!--<spring-kafka.version>1.1.0.RELEASE</spring-kafka.version>-->
 
         <!--prod-->
-        <spring-kafka.version>1.1.0.RELEASE</spring-kafka.version>
+        <spring-kafka.version>1.3.5.RELEASE</spring-kafka.version>
     </properties>
 
     <dependencies>
