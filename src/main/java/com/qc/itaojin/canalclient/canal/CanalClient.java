@@ -140,7 +140,7 @@ public class CanalClient extends Thread {
             int size = message.getEntries().size();
             boolean flag = true;
             if (batchId == -1 || size == 0) {
-                info("tjk canal client listen server...");
+//                info("tjk canal client listen server...");
                 try {
                     Thread.sleep(requestInterval);
                 } catch (InterruptedException e) {

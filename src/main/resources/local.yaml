@@ -8,17 +8,17 @@ canal:
   # 监听表格正则
   tjk-filter-regex: .*\\..*
   # 客户端向服务端拉取数据的时间间隔（毫秒）
-  tjk-request-interval: 1000
+  tjk-request-interval: 100
 
   # ai
   ai-destination: ai
   ai-filter-regex: .*\\..*
-  ai-request-interval: 1000
+  ai-request-interval: 100
 
   # 支付
   pay-destination: pay
   pay-filter-regex: .*\\..*
-  pay-request-interval: 1000
+  pay-request-interval: 10000
 
   # 工作台
   bench-destination: bench
