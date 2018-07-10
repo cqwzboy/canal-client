@@ -1,4 +1,4 @@
-package com.qc.itaojin.canalclient.canal.counter;
+package com.qc.itaojin.canalclient.kafka.counter;
 
 import com.qc.itaojin.canalclient.common.Counter;
 import lombok.Data;

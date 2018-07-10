@@ -1,6 +1,5 @@
 package com.qc.itaojin.canalclient.kafka;
 
-import com.qc.itaojin.canalclient.canal.counter.kafkaCounter;
 import com.qc.itaojin.canalclient.canal.entity.CanalOperationEntity;
 import com.qc.itaojin.canalclient.canal.entity.ErrorEntity;
 import com.qc.itaojin.canalclient.common.Constants;
@@ -8,6 +7,7 @@ import com.qc.itaojin.canalclient.enums.CanalOperationLevelEnum;
 import com.qc.itaojin.canalclient.enums.CanalOperationTypeEnum;
 import com.qc.itaojin.canalclient.enums.DataSourceTypeEnum;
 import com.qc.itaojin.canalclient.enums.ErrorTypeEnum;
+import com.qc.itaojin.canalclient.kafka.counter.kafkaCounter;
 import com.qc.itaojin.canalclient.mysql.service.IMysqlService;
 import com.qc.itaojin.common.HBaseErrorCode;
 import com.qc.itaojin.exception.ItaojinHBaseException;
@@ -16,7 +16,6 @@ import com.qc.itaojin.service.IHiveService;
 import com.qc.itaojin.util.JsonUtil;
 import com.qc.itaojin.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.hbase.TableNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
