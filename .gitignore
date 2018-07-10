@@ -16,6 +16,10 @@
 *.iws
 *.iml
 *.ipr
+.mvn
+derby.log
+mvnw.cmd
+mvnw
 
 ### NetBeans ###
 /nbproject/private/
