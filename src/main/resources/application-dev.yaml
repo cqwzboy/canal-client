@@ -25,12 +25,61 @@ itaojin:
   hive:
     driver: org.apache.hive.jdbc.HiveDriver
     preUrl: jdbc:hive2://itaojin106:10000/
+  canal:
+    # canal客户端向server抓取数据的数据
+    batch-size: 1000
+
+    # tjk
+    tjkDestination: tjk
+    # 监听表格正则
+    tjkFilterRegex: .*\\..*
+    # 客户端向服务端拉取数据的时间间隔（毫秒）
+    tjkRequestInterval: 100
+
+    # ai
+    aiDestination: ai
+    aiFilterRegex: .*\\..*
+    aiRequestInterval: 100
+
+    # 支付
+    payDestination: pay
+    payFilterRegex: .*\\..*
+    payRequestInterval: 10000
+
+    # 工作台
+    benchDestination: bench
+    benchFilterRegex: .*\\..*
+    benchRequestInterval: 1000
+  mysql:
+    driver: com.mysql.jdbc.Driver
+
+    # tjk
+    # 缺省schema，程序自动拼接
+    tjkUrl: jdbc:mysql://192.168.4.31:3306/
+    tjkUserName: test
+    tjkPassword: test
+
+    # ai
+    # 缺省schema，程序自动拼接
+    aiUrl: jdbc:mysql://192.168.4.31:3306/
+    aiUserName: test
+    aiPassword: test
+
+    # 支付
+    payUrl: jdbc:mysql://192.168.4.31:3306/
+    payUserName: test
+    payPassword: test
+
+    # 工作台
+    benchUrl: jdbc:mysql://192.168.4.31:3306/
+    benchUserName: test
+    benchPassword: test
+
+    # 自身系统使用的数据库，必有
+    bizUrl: jdbc:mysql://192.168.4.31:3306/tjk_bigdata
+    bizUserName: test
+    bizPassword: test
 
 
-######################### logging ###########################
-#logging:
-#  level:
-#    com.qc.itaojin.canalclient: DEBUG
-#  file: /root/canal-client.log
 
 

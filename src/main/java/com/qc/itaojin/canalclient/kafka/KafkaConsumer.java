@@ -17,15 +17,17 @@ import com.qc.itaojin.util.JsonUtil;
 import com.qc.itaojin.util.StringUtils;
 import com.qc.itaojin.util.YamlUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author fuqinqin
@@ -62,7 +64,26 @@ public class KafkaConsumer {
     /**
      * 黑名单
      * */
-    private Map<String, Object> blackMap = YamlUtil.load("black.yaml");
+    Set<String> blackSet;
+
+    @PostConstruct
+    public void init(){
+        blackSet = new HashSet<>();
+        Map<String, Map<String, List<String>>> blackMap = YamlUtil.load("classpath:blacklist.yaml");
+        if(MapUtils.isNotEmpty(blackMap)){
+            for(Map.Entry<String, Map<String, List<String>>> bizEntry : blackMap.entrySet()){
+                String biz = bizEntry.getKey();
+                Map<String, List<String>> schemaMap = bizEntry.getValue();
+                for(Map.Entry<String, List<String>> schemaEntry : schemaMap.entrySet()){
+                    String schema = schemaEntry.getKey();
+                    List<String> blackTableList = schemaEntry.getValue();
+                    for (String table : blackTableList) {
+                        blackSet.add(buildBlackFlag(biz, schema, table));
+                    }
+                }
+            }
+        }
+    }
 
     @KafkaListener(topics = "itaojin_bigdata")
     public void processMessage(String content) {
@@ -86,7 +107,8 @@ public class KafkaConsumer {
             threadId = operationEntity.getThreadId();
 
             // 过滤黑名单
-            if(inBlackList(ID, schema, table)){
+            if(blackSet.contains(buildBlackFlag(ID.name().toLowerCase(), schema, table))){
+                log.info("========================= 黑名单 {}, {}, {} =========================", ID.name().toLowerCase(), schema, table);
                 return;
             }
 
@@ -168,28 +190,6 @@ public class KafkaConsumer {
     }
 
     /**
-     * 判断是否在黑名单内
-     * */
-    private boolean inBlackList(DataSourceTypeEnum ID, String schema, String table) {
-        if(MapUtils.isEmpty(blackMap)){
-            return false;
-        }
-
-        for(Map.Entry<String, Object> entry : blackMap.entrySet()){
-            String biz = entry.getKey();
-            if(biz.equalsIgnoreCase(StringUtils.contact(ID.name(), ".", schema))){
-                // table
-                String t = (String) entry.getValue();
-                if(table.equalsIgnoreCase(t)){
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * 初始化Hive和HBase关联表
      * */
     private void initSchema(String schema, String table) throws Exception {
@@ -242,6 +242,13 @@ public class KafkaConsumer {
 
     private void warn(String content, Object... objects) {
         log.warn(String.format(Constants.LOG_TEMPLATE, threadId, ID == null ? null : ID.name(), content), objects);
+    }
+
+    /**
+     * 黑名单缓存字符串拼接规则
+     * */
+    private String buildBlackFlag(String biz, String schema, String table){
+        return StringUtils.contact(biz, ".", schema, ".", table);
     }
 
 }

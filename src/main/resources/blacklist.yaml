@@ -1,0 +1,3 @@
+ai:
+  mysql:
+    - ha_health_check

@@ -12,54 +12,37 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConfigurationProperties(prefix = "mysql")
-@PropertySource(value = "classpath:local.yaml")
 @Data
 public class MysqlConfiguration extends BaseConfiguration{
 
     /**
      * 驱动
      * */
-    @Value("${driver}")
     private String driver;
 
     /******************************** TJK ********************************/
-    @Value("${tjk-url}")
     private String tjkUrl;
-    @Value("${tjk-user-name}")
     private String tjkUserName;
-    @Value("${tjk-password}")
     private String tjkPassword;
 
     /******************************** AI ********************************/
-    @Value("${ai-url}")
     private String aiUrl;
-    @Value("${ai-user-name}")
     private String aiUserName;
-    @Value("${ai-password}")
     private String aiPassword;
 
     /******************************** 支付 ********************************/
-    @Value("${pay-url}")
     private String payUrl;
-    @Value("${pay-user-name}")
     private String payUserName;
-    @Value("${pay-password}")
     private String payPassword;
 
     /******************************** 工作台 ********************************/
-    @Value("${bench-url}")
     private String benchUrl;
-    @Value("${bench-user-name}")
     private String benchUserName;
-    @Value("${bench-password}")
     private String benchPassword;
 
     /******************************** 系统自用数据库，必有！ ********************************/
-    @Value("${biz-url}")
     private String bizUrl;
-    @Value("${biz-user-name}")
     private String bizUserName;
-    @Value("${biz-password}")
     private String bizPassword;
 
     public String getUrl(DataSourceTypeEnum dataSourceTyp){

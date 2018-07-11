@@ -15,6 +15,12 @@ spring:
       batch-size: 65536
       buffer-memory: 524288
 
+######################### logging ###########################
+logging:
+  level:
+    com.qc.itaojin.canalclient: DEBUG
+  file: /usr/local/src/canal_client/logs/canal-client.log
+
 ######################### itaojin ###########################
 itaojin:
   hbase:
@@ -29,11 +35,62 @@ itaojin:
     driver: org.apache.hive.jdbc.HiveDriver
     preUrl: jdbc:hive2://node3:10000/
 
+  canal:
+    # canal客户端向server抓取数据的数据
+    batchSize: 1000
 
-######################### logging ###########################
-logging:
-  level:
-    com.qc.itaojin.canalclient: DEBUG
-  file: /usr/local/src/canal_client/logs/canal-client.log
+    # tjk
+    tjkSestination: tjk
+    # 监听表格正则
+    tjkFilterRegex: .*\\..*
+    # 客户端向服务端拉取数据的时间间隔（毫秒）
+    tjkRequestInterval: 100
+
+    # ai
+    aiDestination: ai
+    aiFilterRegex: .*\\..*
+    aiRequestInterval: 100
+
+    # 支付
+    payDestination: pay
+    payFilterRegex: .*\\..*
+    payRequestInterval: 10000
+
+    # 工作台
+    benchDestination: bench
+    benchFilterRegex: .*\\..*
+    benchRequestInterval: 1000
+
+  mysql:
+    driver: com.mysql.jdbc.Driver
+
+    # tjk
+    # 缺省schema，程序自动拼接
+    tjkUrl: jdbc:mysql://rm-bp127us7d36zxqm7v.mysql.rds.aliyuncs.com:3306/
+    tjkUserName: tjk_read
+    tjkPassword: tjk_only_read
+
+    # ai
+    # 缺省schema，程序自动拼接
+    aiUrl: jdbc:mysql://rm-bp1fyiq5b4v8szo26o.mysql.rds.aliyuncs.com:3306/
+    aiUserName: canal
+    aiPassword: canal
+
+    # 支付
+    payUrl: jdbc:mysql://182.140.146.204:4406/
+    payUserName: canal
+    payPassword: canal
+
+    # 工作台
+    benchUrl: jdbc:mysql://120.55.114.70:3306/
+    benchUserName: tjkread
+    benchPassword: tjkReadOnly
+
+    # 自身系统使用的数据库，必有
+    bizUrl: jdbc:mysql://192.168.4.31:3306/tjk_bigdata
+    bizUserName: test
+    bizPassword: test
+
+
 
 
