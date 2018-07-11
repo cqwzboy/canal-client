@@ -15,12 +15,16 @@ import com.qc.itaojin.service.IHBaseService;
 import com.qc.itaojin.service.IHiveService;
 import com.qc.itaojin.util.JsonUtil;
 import com.qc.itaojin.util.StringUtils;
+import com.qc.itaojin.util.YamlUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -55,6 +59,11 @@ public class KafkaConsumer {
      */
     private kafkaCounter counter = new kafkaCounter();
 
+    /**
+     * 黑名单
+     * */
+    private Map<String, Object> blackMap = YamlUtil.load("black.yaml");
+
     @KafkaListener(topics = "itaojin_bigdata")
     public void processMessage(String content) {
         info("consumer message:{}", content);
@@ -75,6 +84,11 @@ public class KafkaConsumer {
             table = operationEntity.getTable();
             ID = operationEntity.getID();
             threadId = operationEntity.getThreadId();
+
+            // 过滤黑名单
+            if(inBlackList(ID, schema, table)){
+                return;
+            }
 
             //DDL
             if (CanalOperationLevelEnum.TABLE.equalsTo(operationLevelEnum)) {
@@ -151,6 +165,28 @@ public class KafkaConsumer {
                 kafkaTemplate.send(Constants.KafkaConstants.ERROR_TOPIC, JsonUtil.toJson(errorEntity));
             }
         }
+    }
+
+    /**
+     * 判断是否在黑名单内
+     * */
+    private boolean inBlackList(DataSourceTypeEnum ID, String schema, String table) {
+        if(MapUtils.isEmpty(blackMap)){
+            return false;
+        }
+
+        for(Map.Entry<String, Object> entry : blackMap.entrySet()){
+            String biz = entry.getKey();
+            if(biz.equalsIgnoreCase(StringUtils.contact(ID.name(), ".", schema))){
+                // table
+                String t = (String) entry.getValue();
+                if(table.equalsIgnoreCase(t)){
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
