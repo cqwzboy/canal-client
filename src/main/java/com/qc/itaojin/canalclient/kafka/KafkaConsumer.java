@@ -22,8 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,12 +62,10 @@ public class KafkaConsumer {
     /**
      * 黑名单
      * */
-    Set<String> blackSet;
+    private static Set<String> blackSet = new HashSet<>();
 
-    @PostConstruct
-    public void init(){
-        blackSet = new HashSet<>();
-        Map<String, Map<String, List<String>>> blackMap = YamlUtil.load("classpath:blacklist.yaml");
+    static {
+        Map<String, Map<String, List<String>>> blackMap = YamlUtil.load("blacklist.yaml");
         if(MapUtils.isNotEmpty(blackMap)){
             for(Map.Entry<String, Map<String, List<String>>> bizEntry : blackMap.entrySet()){
                 String biz = bizEntry.getKey();
@@ -247,7 +243,7 @@ public class KafkaConsumer {
     /**
      * 黑名单缓存字符串拼接规则
      * */
-    private String buildBlackFlag(String biz, String schema, String table){
+    private static String buildBlackFlag(String biz, String schema, String table){
         return StringUtils.contact(biz, ".", schema, ".", table);
     }
 
