@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * Created by fuqinqin on 2018/6/29.
  */
 @Component
-@ConfigurationProperties(prefix = "mysql")
+@ConfigurationProperties(prefix = "itaojin.mysql")
 @Data
 public class MysqlConfiguration extends BaseConfiguration{
 

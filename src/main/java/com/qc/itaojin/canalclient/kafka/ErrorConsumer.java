@@ -25,10 +25,6 @@ public class ErrorConsumer {
      * 物理数据库业务类型
      * */
     private DataSourceTypeEnum ID;
-    /**
-     * 线程ID
-     * */
-    private long threadId;
 
     @KafkaListener(topics = "errorLog")
     public void logError(String error){

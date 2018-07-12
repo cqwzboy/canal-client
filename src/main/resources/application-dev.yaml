@@ -27,7 +27,7 @@ itaojin:
     preUrl: jdbc:hive2://itaojin106:10000/
   canal:
     # canal客户端向server抓取数据的数据
-    batch-size: 1000
+    batchSize: 1000
 
     # tjk
     tjkDestination: tjk

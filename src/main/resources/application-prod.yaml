@@ -29,7 +29,7 @@ itaojin:
     # 默认为 /hbase
     parent: /hbase
   zookeeper:
-    quorum: node2,node3,node4
+    quorum: node2,node3,node4,node5,node6
     port: 2181
   hive:
     driver: org.apache.hive.jdbc.HiveDriver
@@ -40,16 +40,16 @@ itaojin:
     batchSize: 1000
 
     # tjk
-    tjkSestination: tjk
+    tjkDestination: tjk
     # 监听表格正则
     tjkFilterRegex: .*\\..*
     # 客户端向服务端拉取数据的时间间隔（毫秒）
-    tjkRequestInterval: 100
+    tjkRequestInterval: 1000
 
     # ai
     aiDestination: ai
     aiFilterRegex: .*\\..*
-    aiRequestInterval: 100
+    aiRequestInterval: 1000
 
     # 支付
     payDestination: pay

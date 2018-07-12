@@ -4,6 +4,7 @@ import com.alibaba.otter.canal.client.CanalConnector;
 import com.alibaba.otter.canal.client.CanalConnectors;
 import com.alibaba.otter.canal.protocol.CanalEntry.*;
 import com.alibaba.otter.canal.protocol.Message;
+import com.alibaba.otter.canal.protocol.exception.CanalClientException;
 import com.qc.itaojin.annotation.PrototypeComponent;
 import com.qc.itaojin.canalclient.canal.counter.CanalCounter;
 import com.qc.itaojin.canalclient.canal.entity.CanalMessage;
@@ -106,6 +107,8 @@ public class CanalClient extends Thread {
         return this;
     }
 
+    private CanalConnector connector;
+
     private void initParams(){
         if(ID == null){
             throw new IllegalArgumentException("CanalClient's ID is null");
@@ -129,18 +132,18 @@ public class CanalClient extends Thread {
         initParams();
 
         // 创建链接（HA）
-        CanalConnector connector = CanalConnectors.newClusterConnector(zkServers, destination, "", "");
+        connector = CanalConnectors.newClusterConnector(zkServers, destination, "", "");
         connector.connect();
         connector.subscribe(filterRegex);
         connector.rollback();
         while (true) {
             // 获取指定数量的数据
-            Message message = connector.getWithoutAck(batchSize);
+            Message message = getMessage();
             long batchId = message.getId();
             int size = message.getEntries().size();
             boolean flag = true;
             if (batchId == -1 || size == 0) {
-//                info("tjk canal client listen server...");
+                info("{} canal client listen server...", ID.text());
                 try {
                     Thread.sleep(requestInterval);
                 } catch (InterruptedException e) {
@@ -171,6 +174,28 @@ public class CanalClient extends Thread {
                 connector.rollback();
             }
         }
+    }
+
+    private Message getMessage(){
+        Message message = null;
+        try{
+            message = connector.getWithoutAck(batchSize);
+        }catch (Throwable e){
+            error("canal connector is invalid, auto reconnect, errorMsg: {}", e.getMessage());
+            try{
+                connector = CanalConnectors.newClusterConnector(zkServers, destination, "", "");
+            }catch (Throwable ex){
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e1) {
+
+                }
+            }
+
+            return getMessage();
+        }
+
+        return message;
     }
 
     /**
