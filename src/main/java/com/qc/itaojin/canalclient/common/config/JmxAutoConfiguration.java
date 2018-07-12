@@ -15,7 +15,7 @@ import org.springframework.remoting.rmi.RmiRegistryFactoryBean;
 public class JmxAutoConfiguration {
 
     private int rmiPort = 12345;
-    private String rmiHost = "node3";
+    private String rmiHost = "localhost";
 
     @Bean
     public RmiRegistryFactoryBean rmiRegistry() {

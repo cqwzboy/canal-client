@@ -130,22 +130,10 @@
     </build>
 
     <repositories>
-        <!--<repository>
+        <repository>
             <id>nexus</id>
             <name>Nexus Repository</name>
             <url>http://192.168.1.105:8081/nexus/content/groups/public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            &lt;!&ndash;snapshots默认是关闭的,需要开启  &ndash;&gt;
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>-->
-        <repository>
-            <id>pri-aliyun</id>
-            <name>pri-aliyun Repository</name>
-            <url>http://47.106.201.17:8081/nexus/content/groups/public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>

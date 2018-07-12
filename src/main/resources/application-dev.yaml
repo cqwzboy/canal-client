@@ -34,17 +34,17 @@ itaojin:
     # 监听表格正则
     tjkFilterRegex: .*\\..*
     # 客户端向服务端拉取数据的时间间隔（毫秒）
-    tjkRequestInterval: 100
+    tjkRequestInterval: 1000
 
     # ai
     aiDestination: ai
     aiFilterRegex: .*\\..*
-    aiRequestInterval: 100
+    aiRequestInterval: 1000
 
     # 支付
     payDestination: pay
     payFilterRegex: .*\\..*
-    payRequestInterval: 10000
+    payRequestInterval: 1000
 
     # 工作台
     benchDestination: bench
