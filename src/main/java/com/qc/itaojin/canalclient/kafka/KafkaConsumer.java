@@ -81,7 +81,7 @@ public class KafkaConsumer {
         }
     }
 
-    @KafkaListener(topics = "itaojin_bigdata")
+    @KafkaListener(topics = "canal_client")
     public void processMessage(String content) {
         info("consumer message:{}", content);
 

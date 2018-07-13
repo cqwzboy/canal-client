@@ -26,7 +26,7 @@ public class ErrorConsumer {
      * */
     private DataSourceTypeEnum ID;
 
-    @KafkaListener(topics = "errorLog")
+    @KafkaListener(topics = "error_log")
     public void logError(String error){
         log.info("error message:{}", error);
 

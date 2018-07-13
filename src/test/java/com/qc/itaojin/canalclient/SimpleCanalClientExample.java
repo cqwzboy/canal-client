@@ -21,14 +21,14 @@ public class SimpleCanalClientExample {
     @Test
     public void test() {
         // 创建链接
-        /*CanalConnector connector = CanalConnectors.newSingleConnector(new InetSocketAddress(AddressUtils.getHostIp(),
-                11111), "example", "", "");*/
-        CanalConnector connector = CanalConnectors.newClusterConnector("node1:2181", "example", "", "");
+        CanalConnector connector = CanalConnectors.newSingleConnector(new InetSocketAddress("itaojin101",
+                11111), "tjk", "", "");
+//        CanalConnector connector = CanalConnectors.newClusterConnector("itaojin105:2181", "tjk", "", "");
         int batchSize = 1000;
         int emptyCount = 0;
         try {
             connector.connect();
-//            connector.subscribe("test\\..*");
+            connector.subscribe("test\\..*");
             connector.rollback();
             int totalEmptyCount = 1200;
             while (emptyCount < totalEmptyCount) {
@@ -44,6 +44,7 @@ public class SimpleCanalClientExample {
                     }
                 } else {
                     emptyCount = 0;
+                    System.out.println("===========================================");
                     // System.out.printf("message[batchId=%s,size=%s] \n", batchId, size);
                     printEntry(message.getEntries());
                 }

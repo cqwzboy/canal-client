@@ -1,7 +1,7 @@
 #kafka
 spring:
   kafka:
-    bootstrap-servers: node2:9092,node3:9092,node4:9092
+    bootstrap-servers: node2:9092,node4:9092,node5:9092
     consumer:
       group-id: 0
       auto-offset-reset: earliest
@@ -42,23 +42,23 @@ itaojin:
     # tjk
     tjkDestination: tjk
     # 监听表格正则
-    tjkFilterRegex: .*\\..*
+    tjkFilterRegex: .*\..*
     # 客户端向服务端拉取数据的时间间隔（毫秒）
-    tjkRequestInterval: 1000
+    tjkRequestInterval: 500
 
     # ai
     aiDestination: ai
-    aiFilterRegex: .*\\..*
-    aiRequestInterval: 1000
+    aiFilterRegex: .*\..*
+    aiRequestInterval: 500
 
     # 支付
     payDestination: pay
-    payFilterRegex: .*\\..*
+    payFilterRegex: .*\..*
     payRequestInterval: 10000
 
     # 工作台
     benchDestination: bench
-    benchFilterRegex: .*\\..*
+    benchFilterRegex: .*\..*
     benchRequestInterval: 1000
 
   mysql:

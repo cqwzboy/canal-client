@@ -28,6 +28,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.util.Assert;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -132,6 +134,7 @@ public class CanalClient extends Thread {
         initParams();
 
         // 创建链接（HA）
+//        connector = CanalConnectors.newSingleConnector(new InetSocketAddress("itaojin101",  11111), destination, "", "");
         connector = CanalConnectors.newClusterConnector(zkServers, destination, "", "");
         connector.connect();
         connector.subscribe(filterRegex);

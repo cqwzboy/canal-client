@@ -30,12 +30,12 @@ public class Constants {
         /**
          * normal_topic
          * */
-        String NORMAL_TOPIC = "itaojin_bigdata";
+        String NORMAL_TOPIC = "canal_client";
 
         /**
          * error_topic
          * */
-        String ERROR_TOPIC = "errorLog";
+        String ERROR_TOPIC = "error_log";
     }
 
 }

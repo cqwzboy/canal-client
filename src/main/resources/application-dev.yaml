@@ -32,23 +32,23 @@ itaojin:
     # tjk
     tjkDestination: tjk
     # 监听表格正则
-    tjkFilterRegex: .*\\..*
+    tjkFilterRegex: test\..*
     # 客户端向服务端拉取数据的时间间隔（毫秒）
     tjkRequestInterval: 1000
 
     # ai
     aiDestination: ai
-    aiFilterRegex: .*\\..*
+    aiFilterRegex: test_ai\..*
     aiRequestInterval: 1000
 
     # 支付
     payDestination: pay
-    payFilterRegex: .*\\..*
+    payFilterRegex: test_pay\..*
     payRequestInterval: 1000
 
     # 工作台
     benchDestination: bench
-    benchFilterRegex: .*\\..*
+    benchFilterRegex: test_bench\..*
     benchRequestInterval: 1000
   mysql:
     driver: com.mysql.jdbc.Driver
