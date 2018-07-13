@@ -23,7 +23,7 @@ public class CanalClientApplicationTests {
 	@Test
 	public void contextLoads() throws ItaojinHBaseException {
 
-		List<DemoEntity> list =  hBaseService.scanAll("ns1", "test_id", DemoEntity.class);
+		List<DemoEntity> list =  hBaseService.scanAll(DemoEntity.class);
 		for (DemoEntity demoEntity : list){
 			System.out.println(demoEntity);
 		}
