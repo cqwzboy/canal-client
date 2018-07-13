@@ -1,0 +1,85 @@
+#kafka
+spring:
+  kafka:
+    bootstrap-servers: 192.168.1.105:9092,192.168.1.106:9092
+    consumer:
+      group-id: test-consumer-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: true
+      auto-commit-interval: 100
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      batch-size: 65536
+      buffer-memory: 524288
+
+######################### itaojin ###########################
+itaojin:
+  hbase:
+    master: itaojin102:600000
+  zookeeper:
+    quorum: itaojin105,itaojin106,itaojin107
+    port: 2181
+  hive:
+    driver: org.apache.hive.jdbc.HiveDriver
+    preUrl: jdbc:hive2://itaojin106:10000/
+  canal:
+    # canal客户端向server抓取数据的数据
+    batchSize: 1000
+
+    # tjk
+    tjkDestination: tjk
+    # 监听表格正则
+    tjkFilterRegex: .*\\..*
+    # 客户端向服务端拉取数据的时间间隔（毫秒）
+    tjkRequestInterval: 1000
+
+    # ai
+    aiDestination: ai
+    aiFilterRegex: .*\\..*
+    aiRequestInterval: 1000
+
+    # 支付
+    payDestination: pay
+    payFilterRegex: .*\\..*
+    payRequestInterval: 1000
+
+    # 工作台
+    benchDestination: bench
+    benchFilterRegex: .*\\..*
+    benchRequestInterval: 1000
+  mysql:
+    driver: com.mysql.jdbc.Driver
+
+    # tjk
+    # 缺省schema，程序自动拼接
+    tjkUrl: jdbc:mysql://192.168.4.31:3306/
+    tjkUserName: test
+    tjkPassword: test
+
+    # ai
+    # 缺省schema，程序自动拼接
+    aiUrl: jdbc:mysql://192.168.4.31:3306/
+    aiUserName: test
+    aiPassword: test
+
+    # 支付
+    payUrl: jdbc:mysql://192.168.4.31:3306/
+    payUserName: test
+    payPassword: test
+
+    # 工作台
+    benchUrl: jdbc:mysql://192.168.4.31:3306/
+    benchUserName: test
+    benchPassword: test
+
+    # 自身系统使用的数据库，必有
+    bizUrl: jdbc:mysql://192.168.4.31:3306/tjk_bigdata
+    bizUserName: test
+    bizPassword: test
+
+
+
+

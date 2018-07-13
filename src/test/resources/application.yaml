@@ -1,0 +1,7 @@
+spring:
+  profiles:
+    active: dev
+
+server:
+  context-path: /canal-client
+  port: 17080
